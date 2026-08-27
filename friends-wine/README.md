@@ -3,6 +3,8 @@
 原创 N 人房地产博弈。规则书原文见 [朋友的酒规则书.txt](./朋友的酒规则书.txt)（由 PDF 提取整理，
 原文在「回合的最后阶段」一节截断，无后续内容）。
 
+**编程对照用流程化规格**见 [规则文档.md](./规则文档.md)（逐条编号、公式化、含实现口径与状态机映射，改引擎/写测试以它为准）。
+
 > **维护约定**：本目录是服务器上的实际开发副本；git 发布仓库在 `E:\financial-leverage`
 > （GitHub: paipai4/-financial-leverage）。**每轮修改后须运行 `bash E:\financial-leverage\sync-from-server.sh`
 > 同步并推送**，服务器端的改动不会自动进仓库。
