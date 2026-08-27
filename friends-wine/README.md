@@ -4,7 +4,7 @@
 原文在「回合的最后阶段」一节截断，无后续内容）。
 
 > **维护约定**：本目录是服务器上的实际开发副本；git 发布仓库在 `E:\financial-leverage`
-> （GitHub: paipai4/-financial-leverage）。**每轮修改后须运行 `E:\financial-leverage\sync-from-server.cmd`
+> （GitHub: paipai4/-financial-leverage）。**每轮修改后须运行 `bash E:\financial-leverage\sync-from-server.sh`
 > 同步并推送**，服务器端的改动不会自动进仓库。
 
 ## 文件结构（参考 paischool 的极简方式）

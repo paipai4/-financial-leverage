@@ -7,8 +7,8 @@
 ## 维护约定（重要）
 
 **源代码的实际工作副本在服务器模块目录 `E:\rtt\server\public\friends-wine`；本仓库是发布镜像。**
-每次修改完模块后，运行根目录的 `sync-from-server.cmd`（一键复制 + commit + push），
-或手动同步用 `git -C E:\financial-leverage push origin main`。服务器端文件不会自动进本仓库。
+每次修改完模块后，在 Git Bash 里运行根目录的 `bash sync-from-server.sh`（一键复制 + commit + push），
+或手动 `git -C E:\financial-leverage push origin main`。服务器端文件不会自动进本仓库。
 
 ## 游戏简介
 
