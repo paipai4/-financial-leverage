@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,
+	height=device-height,
+	user-scalable=no,
+	interactive-widget=resizes-content,
+	viewport-fit=cover">
+<meta name="theme-color" content="#444">
+<title>朋友的酒 Friends Wine</title>
+<link rel="stylesheet" href="/fonts/fonts.css">
+<link rel="stylesheet" href="/common/client.css">
+<link rel="stylesheet" href="play.css">
+<script defer src="/common/client.js"></script>
+<script defer src="data.js"></script>
+<script defer src="play.js"></script>
+</head>
+<body class="friends-wine">
+
+<header>
+	<div id="toolbar">
+		<details>
+			<summary><img src="/images/cog.svg"></summary>
+			<menu></menu>
+		</details>
+	</div>
+	<!-- #actions 与 #prompt 由 /common/client.js 自动注入 -->
+</header>
+
+<aside>
+	<div id="roles">
+		<div class="role" id="role_Wang">
+			<div class="role_name">玩家 A · 王总</div>
+			<div class="role_stat" id="stat_Wang"></div>
+			<div class="role_user"></div>
+		</div>
+		<div class="role" id="role_Li">
+			<div class="role_name">玩家 B · 李总</div>
+			<div class="role_stat" id="stat_Li"></div>
+			<div class="role_user"></div>
+		</div>
+		<div class="role" id="role_Zhao">
+			<div class="role_name">玩家 C · 赵总</div>
+			<div class="role_stat" id="stat_Zhao"></div>
+			<div class="role_user"></div>
+		</div>
+		<div class="role" id="role_Sun">
+			<div class="role_name">玩家 D · 孙总</div>
+			<div class="role_stat" id="stat_Sun"></div>
+			<div class="role_user"></div>
+		</div>
+		<div class="role" id="role_Qian">
+			<div class="role_name">玩家 E · 钱总</div>
+			<div class="role_stat" id="stat_Qian"></div>
+			<div class="role_user"></div>
+		</div>
+		<div class="role" id="role_Zhou">
+			<div class="role_name">玩家 F · 周总</div>
+			<div class="role_stat" id="stat_Zhou"></div>
+			<div class="role_user"></div>
+		</div>
+	</div>
+	<div id="turn_info"></div>
+	<div id="log"></div>
+</aside>
+
+<main>
+	<div id="tablewrap">
+		<!-- 拍卖台 / 城市列 / 手牌区由 play.js 渲染 -->
+		<div id="stage"></div>
+		<div id="cities"></div>
+		<div id="handstrip"></div>
+	</div>
+</main>
+
+<div id="tooltip" hidden></div>
+
+<dialog id="auction_dialog" class="modal-dialog">
+	<div id="auction_body"></div>
+</dialog>
+
+<footer id="status"></footer>
+
+</body>
+</html>

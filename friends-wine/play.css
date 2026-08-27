@@ -1,0 +1,378 @@
+/* 朋友的酒 — 模块样式（叠加在 common/client.css 之上）
+ * 美工方案参考 shanghai1937：页面骨架/按钮/日志全用公共样式，
+ * 本文件只负责桌布底色、角色底色、城市列与手牌的纸感皮肤 */
+
+/* ---- 桌布 ---- */
+
+main {
+	background-color: rgb(149, 137, 134); /* 与上海1937 同款暖灰桌布 */
+}
+
+#tablewrap {
+	max-width: 1320px;
+	margin: 0 auto;
+	padding: 14px 16px 40px;
+}
+
+/* ---- 己方回合表头着色（仿 POG / 上海1937）----
+ * client.js 在本方回合时给 header 加 your_turn 类；body 类即角色名。
+ * 六位老板：王=红、李=蓝、赵=绿、孙=杏、钱=紫、周=青 */
+body.Wang header.your_turn { background-color: lightcoral; }
+body.Li header.your_turn { background-color: lightsteelblue; }
+body.Zhao header.your_turn { background-color: lightgreen; }
+body.Sun header.your_turn { background-color: wheat; }
+body.Qian header.your_turn { background-color: plum; }
+body.Zhou header.your_turn { background-color: paleturquoise; }
+
+/* 玩家座位卡底色（仿 POG 的 role 底色） */
+#role_Wang, .role[data-role="Wang"] { background-color: lightcoral; }
+#role_Li, .role[data-role="Li"] { background-color: lightsteelblue; }
+#role_Zhao, .role[data-role="Zhao"] { background-color: lightgreen; }
+#role_Sun, .role[data-role="Sun"] { background-color: wheat; }
+#role_Qian, .role[data-role="Qian"] { background-color: plum; }
+#role_Zhou, .role[data-role="Zhou"] { background-color: paleturquoise; }
+
+/* 未参战的座位行隐藏 */
+.role.hidden { display: none; }
+
+/* ---- 信息面板（纸质告示牌风） ---- */
+
+.panel {
+	background-color: floralwhite;
+	border: 1px solid black;
+	border-radius: 4px;
+	padding: 8px 12px;
+	margin-bottom: 10px;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.panel h3 {
+	margin: -8px -12px 6px;
+	padding: 3px 12px;
+	font-size: 13px;
+	background-color: tan; /* 仿 chart_popup_header */
+	border-bottom: 1px solid black;
+	letter-spacing: 2px;
+}
+
+.panel .text {
+	color: #222;
+	line-height: 18px;
+}
+
+/* ---- 城市列 ---- */
+
+#cities {
+	display: flex;
+	gap: 12px;
+	align-items: stretch;
+	overflow-x: auto;
+	padding-bottom: 8px;
+}
+
+.city {
+	flex: 1 1 0;
+	min-width: 195px;
+	background-color: #f5efdf;
+	border: 1px solid black;
+	border-radius: 5px;
+	padding: 8px 10px;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.city .cname {
+	text-align: center;
+	font-size: 17px;
+	font-weight: bold;
+	letter-spacing: 4px;
+	color: #333;
+	background-color: tan;
+	border-bottom: 1px solid black;
+	margin: -2px -10px 6px;
+	padding: 2px 0;
+}
+
+.city .housing {
+	text-align: center;
+	font-size: 20px;
+	font-weight: bold;
+	color: #222;
+	background-color: khaki;
+	border: 1px solid black;
+	border-radius: 999px;
+	width: 88px;
+	line-height: 32px;
+	margin: 4px auto 8px;
+	user-select: none;
+}
+
+.pool {
+	margin: 6px 0;
+	font-size: 12px;
+	color: #444;
+}
+
+.pool .label {
+	color: #666;
+	letter-spacing: 1px;
+}
+
+.stackrow {
+	display: flex;
+	align-items: center;
+	gap: 3px;
+	margin-top: 3px;
+	height: 22px;
+	min-height: 20px;
+}
+
+.stackrow i {
+	color: #777;
+	margin-left: 4px;
+}
+
+/* 牌背：贷=绛红、地=墨绿，白字居中（经典牌背观感） */
+.cardlet {
+	position: relative;
+	width: 27px;
+	height: 20px;
+	border: 1px solid black;
+	border-radius: 3px;
+	color: white;
+	font-size: 9px;
+	line-height: 18px;
+	text-align: center;
+	user-select: none;
+}
+.cardlet {
+	background: repeating-linear-gradient(45deg, #7c3030, #7c3030 3px, #8d3a3a 3px, #8d3a3a 6px);
+}
+.cardlet.land {
+	background: repeating-linear-gradient(45deg, #2e5641, #2e5641 3px, #39684f 3px, #39684f 6px);
+}
+
+.rels {
+	margin-top: 8px;
+	font-size: 11.5px;
+}
+
+.rels .relrow {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin-top: 3px;
+}
+
+.relb {
+	width: 17px;
+	height: 17px;
+	border-radius: 3px;
+	color: white;
+	font-size: 10.5px;
+	line-height: 17px;
+	text-align: center;
+	flex: none;
+	background-color: #555;
+}
+
+.relchip {
+	min-width: 17px;
+	text-align: center;
+	padding: 0 3px;
+	border-radius: 3px;
+	background-color: gainsboro;
+	border: 1px solid #999;
+	color: #222;
+}
+
+.consumer-list {
+	margin-top: 6px;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+}
+
+.token {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	padding: 1px 7px;
+	border-radius: 999px;
+	background-color: white;
+	border: 1px solid black;
+	font-size: 11px;
+	color: #222;
+	cursor: default;
+}
+.token.paid {
+	opacity: 0.55;
+	border-style: dashed;
+}
+
+/* ---- 手牌区 ---- */
+
+#handstrip {
+	margin-top: 14px;
+}
+
+.hand-label {
+	font-size: 12px;
+	color: #333;
+	letter-spacing: 2px;
+	margin-bottom: 6px;
+}
+
+.hand-cards {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.hcard {
+	position: relative;
+	width: 122px;
+	min-height: 64px;
+	background-color: floralwhite;
+	color: #222;
+	border: 1px solid black;
+	border-radius: 6px;
+	padding: 6px 8px 8px;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+.hcard .t {
+	font-weight: bold;
+	font-size: 13.5px;
+	letter-spacing: 1px;
+}
+.hcard .d {
+	margin-top: 4px;
+	font-size: 10.5px;
+	line-height: 14px;
+	color: #555;
+	max-height: 44px;
+	overflow: hidden;
+}
+.hcard.playable {
+	box-shadow: 0 0 0 1px #000, 0 0 0 4px lime; /* 仿 POG selectable 高亮 */
+}
+.hcard.dim {
+	opacity: 0.8;
+}
+
+/* ---- 日志（配合 rules.js 的 .h1/.h2/* 前缀，仿 POG 色带） ---- */
+
+#log .h1 {
+	background-color: thistle;
+	font-weight: bold;
+	text-align: center;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	border-top: 1px solid black;
+	border-bottom: 1px solid black;
+}
+
+#log .h2 {
+	background-color: lightgray;
+	font-weight: bold;
+	text-align: center;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	border-top: 1px solid black;
+	border-bottom: 1px solid black;
+}
+
+#log div.bold {
+	font-weight: bold;
+}
+
+/* ---- 可点击高亮（统一语义：橙色金边=可点，青色=已选中/行动中） ---- */
+
+.city.clickable {
+	box-shadow: 0 0 0 2px #ff8c1a, 0 0 12px rgba(255, 140, 26, 0.6);
+	cursor: pointer;
+}
+
+.city.clickable:hover {
+	filter: brightness(1.04);
+}
+
+.hcard.playable {
+	cursor: pointer;
+	box-shadow: 0 0 0 1px #000, 0 0 0 4px #ff8c1a;
+}
+.hcard.playable:hover {
+	filter: brightness(1.06);
+}
+
+/* 选人动作（双规/金融监管）：侧栏座位卡整卡高亮可点 */
+.role.targetable {
+	outline: 2px solid #ff8c1a;
+	cursor: pointer;
+}
+.role.targetable:hover {
+	filter: brightness(1.06);
+}
+
+/* 消费者池地块：可支付造房费时绿框可点 */
+.token.developable {
+	outline: 2px solid #2e9e4f;
+	cursor: pointer;
+}
+.token.developable:hover {
+	filter: brightness(1.08);
+}
+
+/* ---- 竞拍弹窗（仿 shanghai1937 的 modal-dialog） ---- */
+
+.modal-dialog {
+	max-width: 460px;
+	background-color: floralwhite;
+	color: #222;
+	border: 1px solid black;
+	border-radius: 6px;
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+}
+
+#auction_dialog::backdrop {
+	background-color: rgba(0, 0, 0, 0.45);
+}
+
+.modal-dialog h3 {
+	font-weight: bold;
+	margin: 0;
+	background-color: tan;
+	padding: 6px 12px;
+	border-bottom: 1px solid black;
+	letter-spacing: 1px;
+}
+
+.modal-dialog .body {
+	padding: 10px 14px 14px;
+	font-size: 13px;
+	line-height: 19px;
+}
+
+.modal-dialog .bid-grid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-top: 10px;
+}
+
+/* ---- 悬停提示 ---- */
+
+#tooltip {
+	position: fixed;
+	z-index: 900;
+	max-width: 280px;
+	padding: 5px 9px;
+	border: 1px solid black;
+	border-radius: 4px;
+	background-color: floralwhite;
+	color: #222;
+	font-size: 12px;
+	line-height: 17px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+	pointer-events: none;
+	white-space: pre-line;
+}
