@@ -12,6 +12,7 @@
  */
 
 var myRole = null
+var FW_CITY_BG_OPACITY = 40 // 城市底图透明度（0-100）
 
 function A(name) {
 	return (view && view.actions && view.actions[name]) || null
@@ -94,8 +95,8 @@ function render_action_buttons() {
 	var acts = view.actions || {}
 	var defs = [
 		["pass_window", "跳过出牌"],
-		["transfer_half", "转一半（政府+1）"],
-		["transfer_all", "全部转贷（政府+2）"],
+		["transfer_half", "转一半（本地+1）"],
+		["transfer_all", "全部转贷（本地+2）"],
 		["transfer_no", "放弃转贷"],
 		["sell_end", "结束卖房"],
 	]
@@ -242,6 +243,24 @@ function render_stage() {
 		return
 	}
 
+	// 城市底图透明度控制条
+	var opBar = document.createElement("div")
+	opBar.className = "opacity-bar"
+	var opLab = document.createElement("span")
+	opLab.textContent = "城市底图透明度"
+	opBar.appendChild(opLab)
+	var opInput = document.createElement("input")
+	opInput.type = "range"
+	opInput.min = "0"
+	opInput.max = "100"
+	opInput.value = String(FW_CITY_BG_OPACITY || 40)
+	opInput.addEventListener("input", function () {
+		FW_CITY_BG_OPACITY = Number(opInput.value)
+		document.documentElement.style.setProperty("--city-bg-opacity", (FW_CITY_BG_OPACITY / 100).toFixed(2))
+	})
+	opBar.appendChild(opInput)
+	el.appendChild(opBar)
+
 	// 还款提醒条：常驻显示每笔未偿贷款离到期的阶段数，最紧急的醒目
 	var loans = (view.loans || []).filter(function (l) { return l.owner && (view.players || []).some(function (p) { return p.id === l.owner && p.alive }) })
 	if (loans.length > 0) {
@@ -301,6 +320,14 @@ function render_city(c) {
 	var root = document.createElement("div")
 	root.className = "city"
 
+	// 城市底图（images/cityN.jpg），透明度可调（全局滑块）
+	var idx = Number(c.id.replace(/\D/g, "")) || 1
+	var img = document.createElement("img")
+	img.className = "city-bg"
+	img.src = `images/city${Math.min(idx, 9)}.jpg`
+	img.draggable = false
+	root.appendChild(img)
+
 	var head = document.createElement("div")
 	head.className = "cname"
 	head.textContent = c.name
@@ -318,7 +345,7 @@ function render_city(c) {
 
 	root.appendChild(pool_block("银行池", c.banks_left, false,
 		`每回合 4 笔贷款，正面朝下堆叠\n每阶段翻出最上面 1 笔进入竞拍（1.5~5倍偿还）\n剩余 ${c.banks_left} 笔未翻`))
-	root.appendChild(pool_block("政府池", c.govs_left, true,
+	root.appendChild(pool_block("土地出让池", c.govs_left, true,
 		`每回合 4 块土地，正面朝下堆叠\n每阶段翻出最上面 1 块进入竞拍（2~10倍底价）\n剩余 ${c.govs_left} 块未翻`))
 
 	var rels = document.createElement("div")
@@ -351,7 +378,7 @@ function render_city(c) {
 		bind_tooltip(t,
 			`${who_name(tok.owner)} 的地块 · 底价 ${fw_fmt_cash(tok.base)}\n` +
 			(tok.paid ? "已支付造房费用，回合结束时交付房产" : "未交付：回合结束获得 1 个维权标记") +
-			"\n每 3 个维权标记：政府关系-1 并收回一块地",
+			"\n每 3 个维权标记：本地关系-1 并收回一块地",
 			"land")
 		// 支付造房费：绿框可点
 		if (!tok.paid && can("develop_land", tok.token)) {
@@ -365,7 +392,7 @@ function render_city(c) {
 			mk.className = "marker-chip"
 			mk.style.background = fw_color(tok.owner)
 			mk.textContent = `⚖${mkv}`
-			bind_tooltip(mk, `${who_name(tok.owner)} 在本城的维权标记：${mkv} 个（每 3 个政府关系-1 并收回一块地）`, "rel")
+			bind_tooltip(mk, `${who_name(tok.owner)} 在本城的维权标记：${mkv} 个（每 3 个本地关系-1 并收回一块地）`, "rel")
 			t.appendChild(mk)
 		}
 		tokens.appendChild(t)
@@ -446,7 +473,7 @@ function rel_row(city, key, label) {
 		chip.style.borderColor = fw_color(p.id)
 		chip.style.backgroundColor = "#fff"
 		chip.textContent = v
-		bind_tooltip(chip, `${who_name(p.id)} 在 ${city.name} 的${key === "gov_rel" ? "政府" : "银行"}关系：${v}` +
+		bind_tooltip(chip, `${who_name(p.id)} 在 ${city.name} 的${key === "gov_rel" ? "本地" : "银行"}关系：${v}` +
 			(key === "bank_rel" ? "\n>3 可免费展期1阶段；>6 可展期2阶段" : "\n≤-2 回合结束会被逮捕"),
 			"rel")
 		grp.appendChild(chip)
@@ -510,9 +537,9 @@ function player_panel(p, targetIds, mine) {
 	head.appendChild(dot)
 	var nm = document.createElement("span")
 	nm.className = "payer-name"
-	// 显示真实用户名（client.js 的 roles 表），无用户名时回退角色名
+	// 显示真实用户名（client.js 的 roles 表），无用户名时回退角色名；企业名作前缀
 	var uname = (typeof roles === "object" && roles[p.id] && roles[p.id].user_name) ? roles[p.id].user_name : null
-	nm.textContent = (mine === p.id ? "▶ " : "") + (uname || who_name(p.id)) + (p.alive ? "" : "（已出局）")
+	nm.textContent = (mine === p.id ? "▶ " : "") + (FW.COMPANY[p.id] ? FW.COMPANY[p.id] + "·" : "") + (uname || who_name(p.id)) + (p.alive ? "" : "（已出局）")
 	head.appendChild(nm)
 	var cash = document.createElement("span")
 	cash.className = "payer-cash"
@@ -630,13 +657,30 @@ function rel_badge(city, p, label, value, kind) {
 			}
 			el.textContent = `地·${fw_fmt_cash(h.base)}·${city_name(h.city)}`
 		} else {
+			// 卡牌三段结构：名称 / 效果 / 额外新闻（直接显示，不悬停）
+			el.classList.add("card")
 			hint = (FW.CARD_LABELS[h.card] || h.label)
 			if (h.desc) hint += "\n" + h.desc
 			if (mine === p.id && can("play_card", h.uid)) {
 				playable = true
 				hint += "\n→ 点击打出"
 			}
-			el.textContent = FW.CARD_LABELS[h.card] || h.label
+			var cname = document.createElement("b")
+			cname.className = "card-name"
+			cname.textContent = FW.CARD_LABELS[h.card] || h.label
+			el.appendChild(cname)
+			if (h.desc) {
+				var cdesc = document.createElement("span")
+				cdesc.className = "card-desc"
+				cdesc.textContent = h.desc
+				el.appendChild(cdesc)
+			}
+			if (h.news) {
+				var cnews = document.createElement("span")
+				cnews.className = "card-news"
+				cnews.textContent = h.news
+				el.appendChild(cnews)
+			}
 		}
 		if (playable) {
 			el.classList.add("playable")

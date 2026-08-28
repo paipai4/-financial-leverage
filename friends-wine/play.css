@@ -194,6 +194,42 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 	padding: 8px 10px;
 	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 	overflow: hidden;
+	position: relative;
+}
+
+/* 城市底图：铺满卡片，透明度由 --city-bg-opacity 控制（滑块） */
+.city-bg {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	opacity: var(--city-bg-opacity, 0.4);
+	pointer-events: none;
+	z-index: 0;
+}
+
+/* 底图透明度控制条 */
+.opacity-bar {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	background: #e8dfc8;
+	border: 1px solid #b8a888;
+	border-radius: 5px;
+	padding: 4px 10px;
+	margin-bottom: 8px;
+	font-size: 13px;
+	color: #4a3c1a;
+}
+.opacity-bar input[type="range"] {
+	width: 140px;
+}
+
+/* 城市卡内容层压在底图上方 */
+.city > *:not(.city-bg) {
+	position: relative;
+	z-index: 1;
 }
 
 .city .cname {
@@ -518,6 +554,41 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 	color: #333;
 	cursor: default;
 	white-space: nowrap;
+}
+
+/* 卡牌三段结构：名称/效果/新闻（纵向卡片） */
+.payer .pcard.card {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 2px;
+	white-space: normal;
+	width: 148px;
+	min-height: 84px;
+	padding: 5px 7px;
+	border-radius: 5px;
+	background: linear-gradient(#fffdf4, #f3ead2);
+	border: 1px solid #a08b5c;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+	vertical-align: top;
+}
+.payer .pcard .card-name {
+	font-size: 14px;
+	color: #5a3c00;
+	letter-spacing: 1px;
+}
+.payer .pcard .card-desc {
+	font-size: 11.5px;
+	line-height: 15px;
+	color: #444;
+}
+.payer .pcard .card-news {
+	font-size: 10.5px;
+	line-height: 14px;
+	color: #8a6d2f;
+	border-top: 1px dashed #c8b88a;
+	padding-top: 2px;
+	margin-top: 1px;
 }
 .payer .pcard.playable {
 	border-color: #ff8c1a;

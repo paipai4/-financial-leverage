@@ -23,8 +23,13 @@ const SCENARIO_PLAYERS = { "双人局": 2, "三人局": 3, "四人局": 4 }
 // 六位老板：王/李/赵/孙/钱/周
 const ROLE_IDS = ["Wang", "Li", "Zhao", "Sun", "Qian", "Zhou"]
 const ROLE_NAMES = {
-	Wang: "王总", Li: "李总", Zhao: "赵总",
-	Sun: "孙总", Qian: "钱总", Zhou: "周总",
+	Wang: "王总", Li: "李总", Zhao: "徐总",
+	Sun: "孙总", Qian: "张总", Zhou: "周总",
+}
+// 企业名（新规则）：旺达王总金、龙创李总紫、久大徐总蓝、旺柯孙总灰、币贵张总橙红、格陵兰周总翠绿
+const COMPANY_NAMES = {
+	Wang: "旺达", Li: "龙创", Zhao: "久大",
+	Sun: "旺柯", Qian: "币贵", Zhou: "格陵兰",
 }
 
 // 最多 7 城（6 人局）。名字虚构。
@@ -65,51 +70,81 @@ exports.default_scenario = "标准局"
 const START_CASH = 1000 // 万元
 const MAX_HOLD_LAND = 2
 
-// 单位：万元
+// 单位：万元。新规则：贷款全部 ×城市数
 const LOANS_BY_ROUND = [
 	[1000, 1200, 1500, 2000],
 	[2000, 2500, 3000, 4000],
 	[5000, 6000, 8000, 10000],
 	[15000, 20000, 30000, 40000],
 ]
-const LOAN_COPIES_EXTRA = [1, 0, 0, 0] // 第一回合的 1500/2000 按规则为城市数+1 张
+const LOAN_COPIES_EXTRA = [0, 0, 0, 0]
 const ROUND_NAMES = ["创立", "发展", "兴盛", "离场"]
 
+// 土地构成：R1 前两档 ×(城市数+1)，其余 ×城市数
 const LANDS_BY_ROUND = [
 	[500, 600, 800, 1000],
 	[1000, 1200, 1500, 2000],
 	[2000, 2500, 3000, 5000],
 	[5000, 6000, 8000, 10000],
 ]
+const LAND_COPIES_EXTRA = [2, 0, 0, 0] // R1 的 500/600 各多 1 张（×城市数+1 → 多 C 张；2 指前两档各 +1）
 
-// 手牌发放：每回合开始加到各玩家手上。数量按牌面标注（cities/players 为随人数动态）
+// 手牌牌堆：每回合首阶段，每位玩家从本回合牌池抽 4 张并保留 4 张。
+// 数量按牌面标注（players/cities 为随人数动态）
 const HANDS_BY_ROUND = [
-	{ weilie: "cities", huikou: "players", chaofang: "players", peitao: 1, shangpiao: 1, xuanzhuan: 1 },
-	{ weilie: "players", huikou: "players", loushi: "players", shuanggui: 2, jingwai: 2, dingxiang: 1, ewai: 1 },
-	{ weilie: "players", huikou: "players", chaofang: "players", fangnao: 2, jianguan: 1, tafang: 1, zhanqi: 1, fangzhu: 1 },
-	{ weilie: "players", huikou: "players", chaofang: "players", baojiao: 2, fanfu: 1 },
+	{ weilie: "players+1", huikou: "players", chaofang: "players", peitao: 2, shangpiao: 2, xuanzhuan: 1 },
+	{ weilie: "players", huikou: "players", loushi: "players-1", shuanggui: 2, jingwai: 2, dingxiang: 2, ewai: 2 },
+	{ weilie: "players-1", huikou: "players-1", fangnao: "players-1", jianguan: 2, tafang: 1, zhanqi: 2, fangzhu: 3, huazhai: 1 },
+	{ weilie: "players-1", huikou: "players-1", jidui: "players-2", baojiao: 3, fanfu: 2, yingzhuolu: 3, dizhichongzu: 2 },
 ]
 
-// 卡牌定义。targets：出牌所需追加选择；pre_only：仅拍卖前窗口可打
+// 卡牌定义。targets：出牌所需追加选择；when：出牌时机（pre_auction/auction/pre_repay/repay/pre_sell/sell/any）
+// news：卡牌三段结构的第三段（额外新闻文案）
 const CARDS = {
-	weilie: { name: "围猎", desc: "选择1个城市，政府关系+1", targets: ["city"], pre_only: true },
-	huikou: { name: "回扣", desc: "选择1个城市，银行关系+1", targets: ["city"], pre_only: true },
-	chaofang: { name: "炒房团", desc: "选择1个城市，房价倍数+2", targets: ["city"], pre_only: true },
-	loushi: { name: "楼市大热", desc: "选择1个城市，房价倍数+3", targets: ["city"], pre_only: true },
-	peitao: { name: "配套商圈", desc: "选择一块还在手上的土地，立刻获得等同于底价的现金", targets: ["handland"] },
-	shangpiao: { name: "商票垫资", desc: "立刻获得500万×回合数的现金", targets: [] },
-	xuanzhuan: { name: "旋转门", desc: "将1点政府关系兑换为同城2点银行关系，或反之", targets: ["rot"] },
-	shuanggui: { name: "双规", desc: "选择1个城市，对1个指定玩家的政府关系-2", targets: ["city", "player"] },
-	jingwai: { name: "境外融资", desc: "立刻获得200万×(银行关系之和)的现金", targets: [] },
-	dingxiang: { name: "定向招拍", desc: "指定城市抽出1块土地立刻拍卖，你优先取得", targets: ["city"], pre_only: true },
-	ewai: { name: "额外贷款", desc: "指定城市抽出1笔贷款立刻拍卖，你优先取得", targets: ["city"], pre_only: true },
-	fangnao: { name: "房闹", desc: "选择1个城市，消费者池每块土地获得1个维权标记", targets: ["city"] },
-	jianguan: { name: "金融监管", desc: "选择1个城市，1名指定玩家的银行关系减半(向上取整)", targets: ["city", "player"] },
-	tafang: { name: "塌方型腐败", desc: "选择1个城市，所有玩家的政府关系清零", targets: ["city"] },
-	zhanqi: { name: "展期谈判", desc: "选择自己1笔贷款的还款标记，推迟2个阶段", targets: ["ownloan"] },
-	fangzhu: { name: "房住不炒", desc: "指定1个城市，房价倍数变为2/3(向上取整)", targets: ["city"] },
-	baojiao: { name: "保交楼", desc: "强制1城内持有地皮的所有玩家支付造房费用", targets: ["city"] },
-	fanfu: { name: "金融反腐", desc: "选择1个城市，所有玩家的银行关系清零", targets: ["city"] },
+	weilie: { name: "围猎", desc: "拍卖前打出，选择1个城市，本地关系+1", when: "auction", targets: ["city"],
+		news: "【我就喜欢喝这个，有一股酱香。】【已严肃摆放鱼头。】【学外语好啊，外语得学。】" },
+	huikou: { name: "回扣", desc: "拍卖前打出，选择1个城市，银行关系+1", when: "auction", targets: ["city"],
+		news: "【我哪是贷贵行款，还不是贷给您的。】【不是说您老婆经营水平不行，我能不能只给她分红？】【您闺女就是我闺女，在波士顿的生活费我包了。】" },
+	chaofang: { name: "炒房团", desc: "拍卖前打出，选择1个城市，房价倍数+2", when: "auction", targets: ["city"],
+		news: "【大盘还要涨，要涨到十万一平！】【现在再不买来不及了！】【我要买三套。】" },
+	loushi: { name: "楼市大热", desc: "卖房前打出，选择1个城市，房价倍数+3", when: "sell", targets: ["city"],
+		news: "【现在买房就是抄底！】【这里都是炒期房的，哪里有什么现房？】【刚需就是刚需，四个钱包启动！】" },
+	peitao: { name: "配套商圈", desc: "卖房前打出，选择一块没放在消费者区的己方土地，立刻获得等同于底价的现金", when: "sell", targets: ["handland"],
+		news: "【我们要在这里建一个巨型商圈，你不信可以看模型。】【虽然现在这里没有居民，商圈建起来就有了。】" },
+	shangpiao: { name: "商票垫资", desc: "任一步骤前打出，立刻获得500万×回合数的现金", when: "any", targets: [],
+		news: "【你拿着这个商票，到期了直接找我们名下任何一家兑款。】【家大业大的，还能赖你吗？】" },
+	xuanzhuan: { name: "旋转门", desc: "任一步骤前打出，将1点本地关系兑换为同城2点银行关系，或反之", when: "any", targets: ["rot"],
+		news: "【XXX长期在金融系统工作，此次调动有利于地方经济工作。】" },
+	shuanggui: { name: "双规", desc: "任一步骤前打出，选择1个城市，对1个指定玩家的本地关系-2", when: "any", targets: ["city", "player"],
+		news: "【经查，XXX丧失理想信念，背弃初心使命】【身后有余忘缩手，眼前无路想回头。】" },
+	jingwai: { name: "境外融资", desc: "任一步骤前打出，立刻获得200万×(银行关系之和)的现金", when: "any", targets: [],
+		news: "【我们公司已经在美国上市。】【我们公司已经在香港上市。】" },
+	dingxiang: { name: "定向招拍", desc: "拍卖前打出，指定1个城市抽取1块土地并立刻拍卖，对这块土地优先于其他玩家取得", when: "auction", targets: ["city"],
+		news: "【哎呀我早说就你们公司适合开发区那块地。】【我们三个小时前就在网上公示招标了，没看见是你的事。】" },
+	ewai: { name: "特批贷款", desc: "拍卖前打出，指定1个城市抽取1笔贷款并在这一阶段拍卖，对这笔贷款优先于其他玩家取得", when: "auction", targets: ["city"],
+		news: "【我说这是助农专项贷款。】【还不上再给你贷一笔，别说我批的。】" },
+	fangnao: { name: "房闹", desc: "任一步骤前打出，选择1个城市，每个消费者池中的土地获得1个维权标记", when: "any", targets: ["city"],
+		news: "【RNM，退钱！】【你们宁肯雇人看工地也不施工啊？】" },
+	jianguan: { name: "金融监管", desc: "任一步骤前打出，选择1个城市，对1个指定玩家的银行关系减半(向上取整)", when: "any", targets: ["city", "player"],
+		news: "【严厉整顿无资质放贷。】【什么叫没抵押信用贷款连批放？】" },
+	tafang: { name: "塌方型腐败", desc: "任一步骤前打出，选择1个城市，所有玩家的本地关系重置清零", when: "any", targets: ["city"],
+		news: "【性质极其恶劣，影响极坏，形成小团伙。】" },
+	zhanqi: { name: "展期谈判", desc: "还款前打出，选择1笔贷款的还款标记，移动到2个阶段后", when: "repay", targets: ["ownloan"],
+		news: "【贷款不是不还，是缓还、待还、有策略地还。】【你再借我一笔我就把上笔还给你。】" },
+	fangzhu: { name: "房住不炒", desc: "卖房前打出，指定1个城市，房价倍数-3，最低不得低于1", when: "sell", targets: ["city"],
+		news: "【我不明白，为什么大家都在说大盘寒冬。】【房子是用来住的、不是用来炒的。】【不要怕，是技术性调整。】" },
+	huazhai: { name: "化债工作组", desc: "还款前打出，选择1笔贷款取消其还款标记，所有城市的银行关系-1", when: "repay", targets: ["ownloan"],
+		news: "【为了社会效益考虑，各债权方应当顾全大局。】" },
+	jidui: { name: "挤兑", desc: "还款前打出，选择1笔贷款，立刻偿付，否则破产", when: "repay", targets: ["anyloan"],
+		news: "【我听说你们工资都发不出来了！】【我们公司的财务很正常啊？老板只是出国考察了！】" },
+	baojiao: { name: "保交楼", desc: "强制1个城市内持有地皮的所有玩家，将造房费用立刻支付到消费者池，否则破产", when: "any", targets: ["city"],
+		news: "【我立下军令状，保证交楼。】【就算企业跑了，地方不会不管你们的。】【上面有专项资金来给你们兜底造完的。】" },
+	fanfu: { name: "金融反腐", desc: "选择1个城市，所有银行关系清零", when: "any", targets: ["city"],
+		news: "【他们彼此之间对请托事项“心知肚明”“心领神会”，却绝不挑明。】【信贷领域是金融干部违法违规的重灾区，“靠金融吃金融”情况频发。】" },
+	yingzhuolu: { name: "硬着陆", desc: "卖房前打出，指定1个城市，房价倍数变为2/3(向上取整)", when: "sell", targets: ["city"],
+		news: "【这个地方已经跌到五年前的一半了。】【只要我是自住刚需，就没有亏本！】【我的房贷已经比房子贵了！】" },
+	dizhichongzu: { name: "抵押重组", desc: "破产前打出，将2块土地(可以是消费者池内的)无回报弃置，取消本次破产，现金归0", when: "any", targets: ["2land"],
+		news: "【我们已经尽了最大努力来偿还债务。】【真的没有钱了！】" },
 }
 
 // ---------------------------------------------------------------------------
@@ -266,19 +301,19 @@ function build_round_decks(game, round) {
 	const c = game.cities.length
 	const loans = []
 	const lands = []
-	for (const v of LOANS_BY_ROUND[round - 1]) {
+	for (let i = 0; i < LOANS_BY_ROUND[round - 1].length; ++i) {
+		const v = LOANS_BY_ROUND[round - 1][i]
 		const copies = c + LOAN_COPIES_EXTRA[round - 1]
-		for (let i = 0; i < copies; ++i)
+		for (let k = 0; k < copies; ++k)
 			loans.push(v)
 	}
-	// 规则口径：每城每回合 4 笔贷款。R1 因构成含 (城市数+1) 的牌总数会超出，
-	// 按「每城恰好 4 笔」裁剪：超出部分从贷款池末尾移除（构成表里最大额的后补牌）。
-	// 这样每个城市池稳定显示 4 笔贷款。
-	while (loans.length > c * 4)
-		loans.pop()
-	for (const v of LANDS_BY_ROUND[round - 1])
-		for (let i = 0; i < c; ++i)
+	// 土地：R1 前两档（500/600）×(城市数+1)，其余 ×城市数
+	for (let i = 0; i < LANDS_BY_ROUND[round - 1].length; ++i) {
+		const v = LANDS_BY_ROUND[round - 1][i]
+		const extra = i < LAND_COPIES_EXTRA[round - 1] ? 1 : 0
+		for (let k = 0; k < c + extra; ++k)
 			lands.push({ base: v })
+	}
 
 	// 上一轮流拍 / 被收回的牌重洗进牌堆
 	for (const x of game.leftover.splice(0)) {
@@ -300,22 +335,33 @@ function deal_round_cards(game, decks) {
 	})
 }
 
+// 每回合首阶段：每位玩家从本回合手牌牌池抽 4 张（并保留 4 张）
 function deal_hands(game, round) {
 	const counts = HANDS_BY_ROUND[round - 1]
 	const n = game.order.length
-	const nc = game.cities.length
+	const pool = []
+	for (const key in counts) {
+		let num
+		if (counts[key] === "players")
+			num = n
+		else if (counts[key] === "players+1")
+			num = n + 1
+		else if (counts[key] === "players-1")
+			num = n - 1
+		else if (counts[key] === "players-2")
+			num = n - 2
+		else
+			num = counts[key]
+		if (num < 0)
+			num = 0
+		for (let i = 0; i < num; ++i)
+			pool.push({ uid: "H" + game.seq++, card: key })
+	}
+	const shuffled_pool = shuffled(game, pool)
 	for (const p of alive_players(game)) {
-		for (const key in counts) {
-			let num
-			if (counts[key] === "players")
-				num = n
-			else if (counts[key] === "cities")
-				num = nc
-			else
-				num = counts[key]
-			for (let i = 0; i < num; ++i)
-				game.hand[p].push({ uid: "H" + game.seq++, card: key })
-		}
+		// 每人从池顶抽 4 张并保留
+		for (let i = 0; i < 4 && shuffled_pool.length > 0; ++i)
+			game.hand[p].push(shuffled_pool.shift())
 	}
 }
 
@@ -376,12 +422,7 @@ function begin_phase(game) {
 	game.priority_q = []
 
 	game.log.push(`.h2 ★ 第 ${game.round} 回合 · 第 ${game.phase} 阶段 ★`)
-	repay_step(game)
-
-	if (alive_players(game).length === 0) {
-		end_round_check(game)
-		return
-	}
+	// 阶段流程（新规则）：出牌窗口（拍卖前）→ 拍卖 → 还款 → 卖房
 	build_auctions_and_window(game)
 }
 
@@ -515,8 +556,19 @@ function legal_targets(game, def, pid) {
 		return rb.length + rg.length > 0 ? { rot_bank: rb, rot_gov: rg } : null
 	}
 	case "ownloan": {
-		const mine = game.loans.filter((l) => l.owner === pid)
+		const mine = game.loans.filter((l) => l.owner === pid && game.alive[l.owner])
 		return mine.length > 0 ? { loans: mine.map((l) => l.uid) } : null
+	}
+	case "anyloan": {
+		const any = game.loans.filter((l) => game.alive[l.owner])
+		return any.length > 0 ? { loans: any.map((l) => l.uid) } : null
+	}
+	case "2land": {
+		// 抵押重组：需要至少 2 块土地（手上或消费者池）
+		let n = game.hand[pid].filter(is_land_card).length
+		for (const c of game.cities)
+			n += c.consumer.filter((t) => t.owner === pid).length
+		return n >= 2 ? {} : null
 	}
 	default:
 		return {}
@@ -541,6 +593,12 @@ function run_auctions(game) {
 	aq.idx++
 	if (aq.idx >= aq.list.length) {
 		game.aq = null
+		// 拍卖结束 → 还款步骤
+		repay_step(game)
+		if (alive_players(game).length === 0) {
+			end_round_check(game)
+			return
+		}
 		sell_start(game)
 		return
 	}
@@ -825,8 +883,72 @@ function apply_card(game, pid, item, tgt) {
 	}
 	case "fangzhu": {
 		const c = city_of(game, tgt.city)
-		c.housing = Math.ceil((c.housing * 2) / 3)
-		game.log.push(`${log_name(pid)} 打出【房住不炒】：${c.name} 房价倍数调整为 ${c.housing}。`)
+		c.housing = Math.max(1, c.housing - 3) // 新规则：-3，最低 1
+		game.log.push(`${log_name(pid)} 打出【房住不炒】：${c.name} 房价倍数 -3 → ${c.housing}。`)
+		break
+	}
+	case "huazhai": {
+		const loan = game.loans.find((l) => l.uid === tgt.loan)
+		if (!loan)
+			throw new Error("找不到这笔贷款")
+		// 取消该笔贷款的还款标记（移除贷款）
+		game.loans.splice(game.loans.indexOf(loan), 1)
+		for (const c of game.cities)
+			for (const p of game.order)
+				c.bank_rel[p] = Math.max(0, c.bank_rel[p] - 1)
+		game.log.push(`${log_name(pid)} 打出【化债工作组】：取消一笔贷款还款标记，全体银行关系 -1。`)
+		break
+	}
+	case "jidui": {
+		const loan = game.loans.find((l) => l.uid === tgt.loan)
+		if (!loan)
+			throw new Error("找不到这笔贷款")
+		// 挤兑：立刻偿付，否则破产
+		const owed = loan.principal * loan.mult10 / 10
+		const owner = loan.owner
+		if (game.cash[owner] >= owed) {
+			game.cash[owner] -= owed
+			game.loans.splice(game.loans.indexOf(loan), 1)
+			game.log.push(`${log_name(pid)} 打出【挤兑】：${log_name(owner)} 立刻偿付 ${fmt_cash(owed)}。`)
+		} else {
+			game.loans.splice(game.loans.indexOf(loan), 1)
+			eliminate(game, owner, "被【挤兑】无法偿付，破产")
+		}
+		break
+	}
+	case "yingzhuolu": {
+		const c = city_of(game, tgt.city)
+		c.housing = Math.ceil((c.housing * 2) / 3) // 硬着陆：变为 2/3 向上取整
+		game.log.push(`${log_name(pid)} 打出【硬着陆】：${c.name} 房价倍数调整为 ${c.housing}。`)
+		break
+	}
+	case "dizhichongzu": {
+		// 抵押重组：弃置 2 块土地（手上或消费者池），现金归 0，取消本次破产
+		// （在破产前打出，本实现作为普通卡处理：弃 2 地现金归 0）
+		let dropped = 0
+		for (const h of game.hand[pid].slice()) {
+			if (dropped >= 2) break
+			if (is_land_card(h)) {
+				game.hand[pid].splice(game.hand[pid].indexOf(h), 1)
+				game.leftover.push({ kind: "land", value: { base: land_base(h), city: land_city(h) } })
+				dropped++
+			}
+		}
+		for (const c of game.cities) {
+			if (dropped >= 2) break
+			for (const t of c.consumer.slice()) {
+				if (dropped >= 2) break
+				if (t.owner === pid) {
+					c.consumer.splice(c.consumer.indexOf(t), 1)
+					game.leftover.push({ kind: "land", value: { base: t.base, city: c.id } })
+					dropped++
+				}
+			}
+		}
+		if (dropped < 2)
+			throw new Error("抵押重组需要弃置 2 块土地")
+		game.cash[pid] = 0
+		game.log.push(`${log_name(pid)} 打出【抵押重组】：弃置 2 块土地，现金归 0。`)
 		break
 	}
 	case "baojiao": {
@@ -839,10 +961,16 @@ function apply_card(game, pid, item, tgt) {
 					sell_to_consumer(game, p, h)
 			}
 			for (const t of c.consumer) {
-				if (t.owner === p && !t.paid && game.cash[p] >= t.base) {
-					game.cash[p] -= t.base
-					t.paid = true
-					game.log.push(`${log_name(p)} 被【保交楼】强制支付造房费用 ${fmt_cash(t.base)}。`)
+				if (t.owner === p && !t.paid) {
+					if (game.cash[p] >= t.base) {
+						game.cash[p] -= t.base
+						t.paid = true
+						game.log.push(`${log_name(p)} 被【保交楼】强制支付造房费用 ${fmt_cash(t.base)}。`)
+					} else {
+						// 否则破产
+						c.consumer.splice(c.consumer.indexOf(t), 1)
+						eliminate(game, p, "被【保交楼】无法支付造房费用，破产")
+					}
 				}
 			}
 		}
@@ -978,6 +1106,18 @@ function ranked_players(game) {
 }
 
 function finish_game(game) {
+	// 终局：强制出售所有土地（按各城当前房价倍数回收现金）
+	for (const p of alive_players(game)) {
+		for (const h of game.hand[p].slice()) {
+			if (!is_land_card(h))
+				continue
+			const c = city_of(game, land_city(h))
+			const proceeds = land_base(h) * c.housing
+			game.hand[p].splice(game.hand[p].indexOf(h), 1)
+			game.cash[p] += proceeds
+			game.log.push(`${log_name(p)} 强制售出 ${c.name} 土地（${fmt_cash(land_base(h))}×${c.housing}=${fmt_cash(proceeds)}）。`)
+		}
+	}
 	const ranked = ranked_players(game)
 	const best = Math.max(...alive_players(game).map((p) => game.cash[p]))
 	const winners = alive_players(game).filter((p) => game.cash[p] === best)
@@ -1032,8 +1172,10 @@ states.game_over = {}
 states.init_pick = {
 	inactive: "初设：选城抽地",
 	prompt(game, view) {
-		view.prompt = `初设：${log_name(game.active)} 请选择一个城市，免费抽取一块土地。`
-		view.actions = { choose_city: game.cities.map((c) => c.id) }
+		view.prompt = `初设：${log_name(game.active)} 请选择一个城市，免费抽取一块土地（该城银行关系+2，城市不得重复）。`
+		// 已有人选过的城市不可再选
+		var available = game.cities.filter(function (c) { return game.picked.indexOf(c.id) < 0 }).map(function (c) { return c.id })
+		view.actions = { choose_city: available }
 	},
 	choose_city(game, player, arg) {
 		if (player !== game.active)
@@ -1041,12 +1183,15 @@ states.init_pick = {
 		const c = city_of(game, arg)
 		if (!c)
 			throw new Error("未知城市")
+		if (game.picked.indexOf(c.id) >= 0)
+			throw new Error("该城市已被其他玩家选择")
 		const land = c.gov.pop()
 		if (!land)
-			throw new Error("该城市的政府池是空的")
+			throw new Error("该城市的土地池是空的")
 		game.hand[player].push({ uid: land.uid, card: land_card_code(land.base, land.city) })
-		game.picked.push(player)
-		game.log.push(`${log_name(player)} 在 ${c.name} 免费抽取了一块土地。`)
+		c.bank_rel[player] += 2 // 初设抽地：该城银行关系+2
+		game.picked.push(c.id)
+		game.log.push(`${log_name(player)} 在 ${c.name} 免费抽取了一块土地（银行关系+2）。`)
 		if (game.picked.length >= game.order.length) {
 			game.picked = []
 			begin_first_round_after_setup(game)
@@ -1090,7 +1235,7 @@ states.window = {
 			window_stay(game, player)
 			return
 		}
-		game.pending = { type: "card", card: h.card, got: {}, left: def.targets.slice() }
+		game.pending = { type: "card", card: h.card, got: {}, left: def.targets.slice(), def_targets: def.targets.slice() }
 		route_targets(game, player)
 	},
 	pass_window(game, player) {
@@ -1115,7 +1260,7 @@ function route_targets(game, player) {
 		return
 	}
 	const t = pend.left[0]
-	game.state = { city: "card_city", player: "card_player", handland: "card_land", ownloan: "card_loan", rot: "card_rot" }[t]
+	game.state = { city: "card_city", player: "card_player", handland: "card_land", ownloan: "card_loan", rot: "card_rot", anyloan: "card_loan" }[t]
 	if (!game.state)
 		throw new Error("未知目标类型 " + t)
 	game.active = player
@@ -1181,18 +1326,22 @@ states.card_land = {
 }
 
 states.card_loan = {
-	inactive: "选择自己的贷款",
+	inactive: "选择贷款",
 	prompt(game, view) {
 		const pend = game.pending
-		view.prompt = `【${CARDS[pend.card].name}】请选择你自己的一笔贷款。`
-		view.actions = { choose_card_loan: game.loans.filter((l) => l.owner === game.active).map((l) => l.uid) }
+		const mine = pend.def_targets && pend.def_targets.includes("anyloan")
+		view.prompt = `【${CARDS[pend.card].name}】请选择${mine ? "一笔" : "你自己的一笔"}贷款。`
+		view.actions = { choose_card_loan: (mine
+			? game.loans.filter((l) => game.alive[l.owner])
+			: game.loans.filter((l) => l.owner === game.active)).map((l) => l.uid) }
 	},
 	choose_card_loan(game, player, arg) {
 		const pend = game.pending
 		if (player !== game.active)
 			throw new Error("不是你的选择")
-		if (!game.loans.some((l) => l.uid === arg && l.owner === player))
-			throw new Error("那不是你的贷款")
+		const mine = pend.def_targets && pend.def_targets.includes("anyloan")
+		if (!game.loans.some((l) => l.uid === arg && (mine ? game.alive[l.owner] : l.owner === player)))
+			throw new Error("那不是可选的贷款")
 		pend.got.loan = arg
 		pend.left.shift()
 		route_targets(game, player)
@@ -1414,7 +1563,10 @@ function public_hand(game, pid) {
 		if (is_land_card(h))
 			return { uid: h.uid, kind: "land", base: land_base(h), city: land_city(h), label: `土地·${fmt_cash(land_base(h))}` }
 		const def = CARDS[h.card]
-		return { uid: h.uid, kind: "card", card: h.card, label: def ? def.name : h.card, desc: def ? def.desc : "" }
+		return {
+			uid: h.uid, kind: "card", card: h.card, label: def ? def.name : h.card,
+			desc: def ? def.desc : "", news: def ? def.news : "",
+		}
 	})
 }
 
