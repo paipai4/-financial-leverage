@@ -437,7 +437,7 @@ function player_panel(p, targetIds, mine) {
 		var myHands = mine === p.id ? (view.hands[p.id] || []) : []
 		var handCount = view.hand_sizes[p.id] || 0
 		var lands = view.lands[p.id] || []
-		body.appendChild(payer_line("地块", lands, p, mine, null, "已卖出的地块会出现在对应城市的消费者池"))
+		body.appendChild(payer_line("地块", lands, p, mine, undefined, "已卖出的地块会出现在对应城市的消费者池"))
 		body.appendChild(payer_line("贷款", (view.loans || []).filter(function (l) { return l.owner === p.id }), p, mine))
 		body.appendChild(payer_line("手牌", myHands, p, mine, handCount))
 	}
@@ -509,8 +509,8 @@ function rel_badge(city, p, label, value, kind) {
 	return wrap
 }
 
-// 地块 / 手牌：他人仅见数量（count），本人见明细（纵向）
-	if (count !== undefined && mine !== p.id) {
+// 地块 / 手牌：仅手牌对他人数数隐藏（count 为数字时）；地块始终公开明细
+	if (typeof count === "number" && mine !== p.id) {
 		var cnt = document.createElement("span")
 		cnt.className = "pcard dead"
 		cnt.textContent = count + " 张"
