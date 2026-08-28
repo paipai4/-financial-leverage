@@ -60,9 +60,8 @@ function on_update() {
 	render_auction_dialog()
 	render_stage()
 	render_cities()
-	render_hand()
+	render_players()
 	render_sidebar()
-	bind_role_targets()
 }
 
 // ---------- 顶部按钮（只留确认/跳过型动作） ----------
@@ -335,83 +334,148 @@ function try_action_on_city(cid) {
 		send_action("rot_to_gov", cid)
 }
 
-// ---------- 手牌区（可点目标） ----------
+// ---------- 玩家面板（每玩家一块垫板：现金/地块/贷款/关系/手牌） ----------
 
-function render_hand() {
-	var box = document.getElementById("handstrip")
+function render_players() {
+	var box = document.getElementById("players")
 	box.replaceChildren()
-
-	var hand = view.my_hand
-	if (!hand)
+	if (!(view.players || []).length)
 		return
 
-	var lab = document.createElement("div")
-	lab.className = "hand-label"
-	lab.textContent = my_turn() && view.state === "window"
-		? "我的手牌（点击亮起的卡牌打出，每阶段限 1 张）"
-		: my_turn() && view.state === "sell"
-			? "我的手牌（点击亮起的土地卖出）"
-			: "我的手牌 / 地块"
-	box.appendChild(lab)
+	// 目标玩家（双规/金融监管选人）
+	var targetIds = Array.isArray(A("choose_card_player")) ? A("choose_card_player") : []
+	var mine = myRole
 
-	var cards = document.createElement("div")
-	cards.className = "hand-cards"
-	for (const h of hand)
-		cards.appendChild(hand_card(h))
-	box.appendChild(cards)
+	for (const p of (view.players || [])) {
+		box.appendChild(player_panel(p, targetIds, mine))
+	}
 }
 
-function hand_card(h) {
-	var el = document.createElement("div")
-	el.className = "hcard"
-	var hint
+function player_panel(p, targetIds, mine) {
+	var root = document.createElement("div")
+	root.className = "payer" +
+		(view.active === p.id ? " active" : "") +
+		(targetIds.indexOf(p.id) >= 0 ? " targetable" : "")
 
-	if (h.kind === "land")
-		hint = `地块 · 底价 ${fw_fmt_cash(h.base)} · 归属 ${city_name(h.city)}\n可持有（全城合计最多留 2 块不卖）`
-	else
-		hint = (FW.CARD_LABELS[h.card] || h.label) + "\n" + (h.desc || "") +
-			"\n（拍卖前窗口可打，每人每阶段限 1 张）"
+	// 头部：色点 + 名字 + 现金
+	var head = document.createElement("div")
+	head.className = "payer-head"
+	var dot = document.createElement("span")
+	dot.className = "payer-dot"
+	dot.style.background = fw_color(p.id)
+	head.appendChild(dot)
+	var nm = document.createElement("span")
+	nm.className = "payer-name"
+	nm.textContent = (mine === p.id ? "▶ " : "") + who_name(p.id) + (p.alive ? "" : "（已出局）")
+	head.appendChild(nm)
+	var cash = document.createElement("span")
+	cash.className = "payer-cash"
+	cash.textContent = p.alive ? fw_fmt_cash(p.cash) : "—"
+	head.appendChild(cash)
+	root.appendChild(head)
 
-	// 可点状态：窗口打牌 / 卖房卖地 / 配套商圈选地
-	var playable = false
-	if (can("play_card", h.uid)) {
-		playable = true
-		hint += "\n→ 点击打出"
-	} else if (h.kind === "land" && can("sell_land", h.uid)) {
-		playable = true
-		hint += `\n→ 点击放入消费者池（回收 底价×${city_by_id(h.city).housing}）`
-	} else if (h.kind === "land" && can("choose_card_land", h.uid)) {
-		playable = true
-		hint += "\n→ 点击选作配套商圈目标"
+	// 地块行
+	var lands = (view.my_hand && mine === p.id ? view.my_hand : []).filter(function (h) { return h.kind === "land" })
+	var body = document.createElement("div")
+	body.className = "payer-body"
+	if (p.alive) {
+		body.appendChild(payer_line("地块", lands, p, mine))
+		body.appendChild(payer_line("贷款", (view.loans || []).filter(function (l) { return l.owner === p.id }), p, mine))
+		body.appendChild(payer_line("关系", (view.cities || []), p, mine))
+		body.appendChild(payer_line("手牌", (view.my_hand && mine === p.id ? view.my_hand : []).filter(function (h) { return h.kind !== "land" }), p, mine))
 	}
+	root.appendChild(body)
 
-	if (playable) {
-		el.classList.add("playable")
-		el.addEventListener("click", function () {
-			if (can("play_card", h.uid))
-				send_action("play_card", h.uid)
-			else if (can("sell_land", h.uid))
-				send_action("sell_land", h.uid)
-			else if (can("choose_card_land", h.uid))
-				send_action("choose_card_land", h.uid)
-		})
-	} else {
-		el.classList.add("dim")
+	// 目标玩家整卡可点
+	if (targetIds.indexOf(p.id) >= 0) {
+		root.addEventListener("click", function () { send_action("choose_card_player", p.id) })
+		bind_tooltip(root, `点击：将 ${who_name(p.id)} 选为目标玩家`)
 	}
-
-	var t = document.createElement("div")
-	t.className = "t"
-	t.textContent = h.kind === "land" ? "土地" : (FW.CARD_LABELS[h.card] || h.label)
-	el.appendChild(t)
-	var d = document.createElement("div")
-	d.className = "d"
-	d.textContent = h.kind === "land" ? `${fw_fmt_cash(h.base)} · ${city_name(h.city)}` : (h.desc || "")
-	el.appendChild(d)
-	bind_tooltip(el, hint)
-	return el
+	return root
 }
 
-// ---------- 侧栏（玩家座位卡 = 选人目标） ----------
+function payer_line(label, items, p, mine) {
+	var line = document.createElement("div")
+	line.className = "payer-line"
+	var lab = document.createElement("span")
+	lab.className = "plabel"
+	lab.textContent = label
+	line.appendChild(lab)
+
+	if (label === "关系") {
+		for (const c of items) {
+			var chip = document.createElement("span")
+			chip.className = "relchip"
+			chip.style.color = fw_color(p.id)
+			chip.textContent = `${c.name} 政${c.gov_rel[p.id]}/银${c.bank_rel[p.id]}`
+			bind_tooltip(chip, `${c.name}：政府关系 ${c.gov_rel[p.id]}（≤-2 逮捕）· 银行关系 ${c.bank_rel[p.id]}（>3 展期1 / >6 展期2）`)
+			line.appendChild(chip)
+		}
+		return line
+	}
+	if (label === "贷款") {
+		for (const l of items) {
+			var chip = document.createElement("span")
+			chip.className = "pcard" + (l.due <= (view.counter || 0) ? " dead" : "")
+			chip.textContent = `${city_name(l.city)} ${fw_fmt_cash(l.principal)}×${fmt_mult10(l.mult10)}（${l.due - (view.counter || 0)} 阶段后到期）`
+			bind_tooltip(chip, `贷款 ${fw_fmt_cash(l.principal)} · 偿还倍数 ${fmt_mult10(l.mult10)} · 到期阶段 ${l.due}`)
+			line.appendChild(chip)
+		}
+		if (!items.length)
+			line.appendChild(empty_hint("无"))
+		return line
+	}
+
+	// 地块 / 手牌：卡片芯片；己方且可操作时高亮可点
+	var cards = document.createElement("span")
+	cards.className = "phand"
+	for (const h of items) {
+		var el = document.createElement("span")
+		el.className = "pcard"
+		var hint, playable = false
+		if (label === "地块") {
+			hint = `地块 · 底价 ${fw_fmt_cash(h.base)} · 归属 ${city_name(h.city)}`
+			if (mine === p.id && can("sell_land", h.uid)) {
+				playable = true
+				hint += `\n→ 点击放入消费者池（回收 底价×${city_by_id(h.city).housing}）`
+			} else if (mine === p.id && can("choose_card_land", h.uid)) {
+				playable = true
+				hint += "\n→ 点击选作配套商圈目标"
+			}
+		} else {
+			hint = (FW.CARD_LABELS[h.card] || h.label)
+			if (h.desc) hint += "\n" + h.desc
+			if (mine === p.id && can("play_card", h.uid)) {
+				playable = true
+				hint += "\n→ 点击打出"
+			}
+		}
+		el.textContent = label === "地块" ? `地·${fw_fmt_cash(h.base)}·${city_name(h.city)}` : (FW.CARD_LABELS[h.card] || h.label)
+		if (playable) {
+			el.classList.add("playable")
+			el.addEventListener("click", function () {
+				if (can("play_card", h.uid)) send_action("play_card", h.uid)
+				else if (can("sell_land", h.uid)) send_action("sell_land", h.uid)
+				else if (can("choose_card_land", h.uid)) send_action("choose_card_land", h.uid)
+			})
+		}
+		bind_tooltip(el, hint)
+		cards.appendChild(el)
+	}
+	if (!items.length)
+		line.appendChild(empty_hint("无"))
+	line.appendChild(cards)
+	return line
+}
+
+function empty_hint(text) {
+	var s = document.createElement("span")
+	s.className = "pcard dead"
+	s.textContent = text
+	return s
+}
+
+// ---------- 侧栏（简化为轮转/回合信息；选人目标在版图玩家面板上） ----------
 
 function render_sidebar() {
 	var seats = {}
@@ -432,18 +496,6 @@ function render_sidebar() {
 	document.getElementById("turn_info").textContent =
 		view.state === "game_over" ? "游戏结束" :
 		`第 ${view.round} 回合（最多4） · 第 ${view.phase} 阶段（最多6）`
-}
-
-// 双规/金融监管等需要选对手：整卡高亮，点击发送
-function bind_role_targets() {
-	var ids = Array.isArray(A("choose_card_player")) ? A("choose_card_player") : []
-	var targetEls = document.querySelectorAll(".role")
-	targetEls.forEach(function (rowEl) {
-		var rid = rowEl.id.replace(/^role_/, "")
-		var on = ids.indexOf(rid) >= 0
-		rowEl.classList.toggle("targetable", on)
-		rowEl.onclick = on ? function () { send_action("choose_card_player", rid) } : null
-	})
 }
 
 // ---------- 共用工具 ----------

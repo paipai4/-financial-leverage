@@ -1450,6 +1450,7 @@ exports.view = function (state, player) {
 			uid: l.uid, owner: l.owner, city: l.city, principal: l.principal, mult10: l.mult10, due: l.due,
 		})),
 		hand_sizes: {},
+		counter: game.counter,
 		pending: game.pending ? { type: game.pending.type, card: game.pending.card || null } : null,
 		auction_left: game.aq && game.aq.list ? game.aq.list.slice(game.aq.idx + 1).map((e) => ({
 			kind: e.kind,

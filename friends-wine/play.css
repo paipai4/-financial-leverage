@@ -209,11 +209,128 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 	border-style: dashed;
 }
 
-/* ---- 手牌区 ---- */
+/* ---- 玩家面板（每玩家一块“垫板”风格面板，含手牌） ---- */
 
-#handstrip {
+#players {
 	margin-top: 14px;
 }
+
+.payer-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-bottom: 10px;
+}
+
+.payer {
+	flex: 1 1 0;
+	min-width: 250px;
+	background-color: #f5efdf;
+	border: 1px solid black;
+	border-radius: 5px;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* 己方/行动方整卡强调：金边 + 略提亮 */
+.payer.active {
+	outline: 3px solid #c9a227;
+}
+
+.payer.targetable {
+	cursor: pointer;
+	box-shadow: 0 0 0 3px #ff8c1a;
+}
+.payer.targetable:hover {
+	filter: brightness(1.05);
+}
+
+.payer-head {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: -0px;
+	padding: 5px 9px;
+	border-bottom: 1px solid black;
+	background-color: #e8dfc8;
+}
+
+.payer-dot {
+	width: 15px;
+	height: 15px;
+	border-radius: 50%;
+	border: 1px solid black;
+	flex: none;
+}
+
+.payer-name {
+	font-weight: bold;
+	font-size: 14px;
+	letter-spacing: 1px;
+}
+
+.payer-cash {
+	margin-left: auto;
+	font-weight: bold;
+	font-size: 14px;
+}
+
+.payer-status {
+	font-size: 11px;
+	color: #7a2f2f;
+}
+
+.payer-body {
+	padding: 6px 9px 8px;
+}
+
+.payer-line {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 5px;
+	margin-top: 4px;
+	font-size: 11.5px;
+	align-items: center;
+}
+.payer-line .plabel {
+	color: #555;
+	letter-spacing: 1px;
+	width: 58px;
+	flex: none;
+}
+
+/* 面板内的关系徽章：紧凑 */
+.payer .relchip {
+	background-color: #e6e0cd;
+}
+
+/* 面板内手牌：紧凑小卡 */
+.payer .phand {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin-top: 4px;
+}
+
+.payer .pcard {
+	font-size: 11px;
+	padding: 1px 6px;
+	border: 1px solid #9c8f6f;
+	border-radius: 3px;
+	background-color: #fffdf4;
+	color: #333;
+	cursor: default;
+	white-space: nowrap;
+}
+.payer .pcard.playable {
+	border-color: #ff8c1a;
+	box-shadow: 0 0 0 2px #ff8c1a;
+	cursor: pointer;
+}
+.payer .pcard.dead {
+	opacity: 0.35;
+}
+
+/* ---- 手牌区（旧 #handstrip 移除后的残留样式清理） ---- */
 
 .hand-label {
 	font-size: 12px;
@@ -253,7 +370,7 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 	overflow: hidden;
 }
 .hcard.playable {
-	box-shadow: 0 0 0 1px #000, 0 0 0 4px lime; /* 仿 POG selectable 高亮 */
+	box-shadow: 0 0 0 1px #000, 0 0 0 4px #ff8c1a;
 }
 .hcard.dim {
 	opacity: 0.8;
