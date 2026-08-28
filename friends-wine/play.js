@@ -471,7 +471,6 @@ function rel_row(city, key, label) {
 		chip.className = "relchip"
 		chip.style.color = fw_color(p.id)
 		chip.style.borderColor = fw_color(p.id)
-		chip.style.backgroundColor = "#fff"
 		chip.textContent = v
 		bind_tooltip(chip, `${who_name(p.id)} 在 ${city.name} 的${key === "gov_rel" ? "本地" : "银行"}关系：${v}` +
 			(key === "bank_rel" ? "\n>3 可免费展期1阶段；>6 可展期2阶段" : "\n≤-2 回合结束会被逮捕"),

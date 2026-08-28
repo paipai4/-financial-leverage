@@ -343,15 +343,16 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 }
 
 .relchip {
-	min-width: 28px;
+	min-width: 32px;
 	text-align: center;
-	padding: 1px 6px;
-	border-radius: 3px;
-	background-color: gainsboro;
-	border: 1px solid #999;
+	padding: 2px 8px;
+	border-radius: 5px;
+	background-color: transparent; /* 去掉白底 */
+	border: 2px solid;
 	color: #222;
-	font-size: 17px;
+	font-size: 20px; /* 数字更大 */
 	font-weight: bold;
+	line-height: 1.2;
 }
 
 /* 关系行里的玩家色点徽章 */
