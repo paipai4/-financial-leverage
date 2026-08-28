@@ -271,6 +271,11 @@ function build_round_decks(game, round) {
 		for (let i = 0; i < copies; ++i)
 			loans.push(v)
 	}
+	// 规则口径：每城每回合 4 笔贷款。R1 因构成含 (城市数+1) 的牌总数会超出，
+	// 按「每城恰好 4 笔」裁剪：超出部分从贷款池末尾移除（构成表里最大额的后补牌）。
+	// 这样每个城市池稳定显示 4 笔贷款。
+	while (loans.length > c * 4)
+		loans.pop()
 	for (const v of LANDS_BY_ROUND[round - 1])
 		for (let i = 0; i < c; ++i)
 			lands.push({ base: v })
@@ -370,7 +375,7 @@ function begin_phase(game) {
 	game.pending = null
 	game.priority_q = []
 
-	game.log.push(`.h2 第 ${game.round} 回合 · 第 ${game.phase} 阶段`)
+	game.log.push(`.h2 ★ 第 ${game.round} 回合 · 第 ${game.phase} 阶段 ★`)
 	repay_step(game)
 
 	if (alive_players(game).length === 0) {
@@ -577,7 +582,7 @@ function open_bid(game, entry) {
 	const what = entry.kind === "loan"
 		? `贷款 ${fmt_cash(entry.principal)}`
 		: `土地（底价 ${fmt_cash(entry.land.base)}）`
-	game.log.push(`${c.name} 翻出${what}，开始竞拍。`)
+	game.log.push(`🃏 ${c.name} 翻开${what}，开始竞拍。`)
 }
 
 function bid_eligible(game, p) {
@@ -1095,9 +1100,8 @@ states.window = {
 }
 
 function window_stay(game, player) {
-	// 牌已打出但窗口还属于该玩家（只能继续跳过），保持状态便于提示
-	game.active = player
-	game.state = "window"
+	// 出完牌后窗口自动推进到下家（无需再点跳过）
+	window_finish_player(game)
 }
 
 function route_targets(game, player) {
@@ -1450,8 +1454,9 @@ exports.view = function (state, player) {
 			uid: l.uid, owner: l.owner, city: l.city, principal: l.principal, mult10: l.mult10, due: l.due,
 		})),
 		hand_sizes: {},
-		// 手牌明细只对自己可见；其他人（含 Observer）仅见数量 hand_sizes
+		// 手牌（不含地块）只对自己可见；地块与贷款公开（另设 lands 字段）
 		hands: {},
+		lands: {},
 		counter: game.counter,
 		pending: game.pending ? { type: game.pending.type, card: game.pending.card || null } : null,
 		auction_left: game.aq && game.aq.list ? game.aq.list.slice(game.aq.idx + 1).map((e) => ({
@@ -1466,7 +1471,10 @@ exports.view = function (state, player) {
 
 	for (const p of game.order) {
 		view.hand_sizes[p] = game.hand[p].length
-		view.hands[p] = p === player ? public_hand(game, p) : null
+		// 手牌卡（不含地块）仅本人可见；地块公开给所有人
+		const full = public_hand(game, p)
+		view.hands[p] = p === player ? full.filter(function (h) { return h.kind !== "land" }) : null
+		view.lands[p] = full.filter(function (h) { return h.kind === "land" })
 	}
 
 	if (game.state === "game_over") {

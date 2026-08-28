@@ -433,13 +433,13 @@ function player_panel(p, targetIds, mine) {
 	var body = document.createElement("div")
 	body.className = "payer-body"
 	if (p.alive) {
-		// 手牌明细仅本人可见；他人只显示张数
+		// 手牌（卡）仅本人可见；地块公开（view.lands）
 		var myHands = mine === p.id ? (view.hands[p.id] || []) : []
 		var handCount = view.hand_sizes[p.id] || 0
-		var landCount = myHands.filter(function (h) { return h.kind === "land" }).length
-		body.appendChild(payer_line("地块", myHands.filter(function (h) { return h.kind === "land" }), p, mine, landCount))
+		var lands = view.lands[p.id] || []
+		body.appendChild(payer_line("地块", lands, p, mine))
 		body.appendChild(payer_line("贷款", (view.loans || []).filter(function (l) { return l.owner === p.id }), p, mine))
-		body.appendChild(payer_line("手牌", myHands.filter(function (h) { return h.kind !== "land" }), p, mine, handCount))
+		body.appendChild(payer_line("手牌", myHands, p, mine, handCount))
 	}
 	root.appendChild(body)
 
