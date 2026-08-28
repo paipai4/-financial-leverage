@@ -66,25 +66,25 @@ body.Sun header.your_turn { background-color: wheat; }
 body.Qian header.your_turn { background-color: plum; }
 body.Zhou header.your_turn { background-color: paleturquoise; }
 
-/* 玩家座位卡：整条淡色背景带（整卡宽），左缘同色实条作强调；
- * 颜色与玩家面板色点一一对应 */
+/* 玩家座位卡：照抄上海1937 的做法——整卡纯色背景（玩家色），无渐变无彩带；
+ * 颜色与玩家面板色点一一对应；在线状态由公共 ○/● 显示 */
 #role_Wang, .role[data-role="Wang"] {
-	background: linear-gradient(90deg, #b04040 10px, #f6dada 10px, #f6dada 100%);
+	background-color: #e3a7a7;
 }
 #role_Li, .role[data-role="Li"] {
-	background: linear-gradient(90deg, #4470b0 10px, #dae6f6 10px, #dae6f6 100%);
+	background-color: #a7bfe3;
 }
 #role_Zhao, .role[data-role="Zhao"] {
-	background: linear-gradient(90deg, #3f8f4f 10px, #d8ecd8 10px, #d8ecd8 100%);
+	background-color: #a7d8a7;
 }
 #role_Sun, .role[data-role="Sun"] {
-	background: linear-gradient(90deg, #b08a3e 10px, #f2e7c8 10px, #f2e7c8 100%);
+	background-color: #e3cfa7;
 }
 #role_Qian, .role[data-role="Qian"] {
-	background: linear-gradient(90deg, #7d5ba6 10px, #e4daf2 10px, #e4daf2 100%);
+	background-color: #c9b5e3;
 }
 #role_Zhou, .role[data-role="Zhou"] {
-	background: linear-gradient(90deg, #2f8f8f 10px, #d6efef 10px, #d6efef 100%);
+	background-color: #a7d8d8;
 }
 
 /* 侧栏角色卡：隐藏角色名（client.js 生成的 .role_name），只留用户名 */
@@ -464,6 +464,25 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 }
 .payer .pcard.dead {
 	opacity: 0.35;
+}
+
+/* 贷款到期警示：红色高亮 + 闪烁（到期/逾期）；近到期橙色 */
+.payer .pcard.due-now {
+	background: #ff5c5c;
+	color: #fff;
+	font-weight: bold;
+	border-color: #a00;
+	animation: due-pulse 1s ease-in-out infinite alternate;
+}
+.payer .pcard.due-soon {
+	background: #ffd9a0;
+	color: #7a3c00;
+	font-weight: bold;
+	border-color: #c87a00;
+}
+@keyframes due-pulse {
+	from { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.5); }
+	to { box-shadow: 0 0 0 6px rgba(255, 0, 0, 0); }
 }
 .payer .pcard.land {
 	border-color: #2e5641;

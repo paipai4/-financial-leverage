@@ -476,9 +476,12 @@ function payer_line(label, items, p, mine, count, hint) {
 	}
 	if (label === "贷款") {
 		for (const l of items) {
+			var dueIn = (l.due || 0) - (view.counter || 0)
 			var chip = document.createElement("span")
-			chip.className = "pcard" + (l.due <= (view.counter || 0) ? " dead" : "")
-			chip.textContent = `${city_name(l.city)} ${fw_fmt_cash(l.principal)}×${fmt_mult10(l.mult10)}（${l.due - (view.counter || 0)} 阶段后到期）`
+			var urgent = dueIn <= 0 // 已到期/逾期
+			var soon = dueIn > 0 && dueIn <= 2
+			chip.className = "pcard" + (urgent ? " due-now" : soon ? " due-soon" : "")
+			chip.textContent = `${urgent ? "⚠" : ""}${city_name(l.city)} ${fw_fmt_cash(l.principal)}×${fmt_mult10(l.mult10)}（${urgent ? "立即偿还！" : dueIn + " 阶段后到期"}）`
 			bind_tooltip(chip, `贷款 ${fw_fmt_cash(l.principal)} · 偿还倍数 ${fmt_mult10(l.mult10)} · 到期阶段 ${l.due}`, "loan")
 			line.appendChild(chip)
 		}
