@@ -1450,6 +1450,8 @@ exports.view = function (state, player) {
 			uid: l.uid, owner: l.owner, city: l.city, principal: l.principal, mult10: l.mult10, due: l.due,
 		})),
 		hand_sizes: {},
+		// 手牌为公开信息：全员手牌（地块/卡牌）对所有人可见（含 Observer）
+		hands: {},
 		counter: game.counter,
 		pending: game.pending ? { type: game.pending.type, card: game.pending.card || null } : null,
 		auction_left: game.aq && game.aq.list ? game.aq.list.slice(game.aq.idx + 1).map((e) => ({
@@ -1462,8 +1464,10 @@ exports.view = function (state, player) {
 		victory: game.victory,
 	}
 
-	for (const p of game.order)
+	for (const p of game.order) {
 		view.hand_sizes[p] = game.hand[p].length
+		view.hands[p] = public_hand(game, p)
+	}
 
 	if (game.state === "game_over") {
 		view.prompt = game.victory || "游戏结束"
