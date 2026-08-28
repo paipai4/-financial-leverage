@@ -45,31 +45,34 @@ body.Sun header.your_turn { background-color: wheat; }
 body.Qian header.your_turn { background-color: plum; }
 body.Zhou header.your_turn { background-color: paleturquoise; }
 
-/* 玩家座位卡：彩色彩带（左缘 8px 色条，颜色与玩家面板色点一一对应）；
- * 底色用同色淡调（仿 POG role 底色），角色卡内容（用户名）由 client.js 生成 */
+/* 玩家座位卡：实色彩带（左缘 16px，颜色与玩家面板色点一一对应）；
+ * 底色取消淡调（公共角色卡白底即可），彩带本身即强对比标识 */
 #role_Wang, .role[data-role="Wang"] {
-	background-color: #fdecec;
-	border-left: 8px solid #b04040;
+	border-left: 16px solid #b04040;
 }
 #role_Li, .role[data-role="Li"] {
-	background-color: #edf3fd;
-	border-left: 8px solid #4470b0;
+	border-left: 16px solid #4470b0;
 }
 #role_Zhao, .role[data-role="Zhao"] {
-	background-color: #eef7ee;
-	border-left: 8px solid #3f8f4f;
+	border-left: 16px solid #3f8f4f;
 }
 #role_Sun, .role[data-role="Sun"] {
-	background-color: #fbf4e4;
-	border-left: 8px solid #b08a3e;
+	border-left: 16px solid #b08a3e;
 }
 #role_Qian, .role[data-role="Qian"] {
-	background-color: #f3effa;
-	border-left: 8px solid #7d5ba6;
+	border-left: 16px solid #7d5ba6;
 }
 #role_Zhou, .role[data-role="Zhou"] {
-	background-color: #e9f6f6;
-	border-left: 8px solid #2f8f8f;
+	border-left: 16px solid #2f8f8f;
+}
+
+/* 侧栏角色卡：隐藏角色名（client.js 生成的 .role_name），只留用户名 */
+#roles .role_name {
+	display: none;
+}
+#roles .role_user {
+	font-weight: bold;
+	padding: 3px 0;
 }
 
 /* 未参战的座位行隐藏 */
@@ -149,12 +152,13 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 .pool {
 	margin: 6px 0;
 	font-size: 14px;
-	color: #444;
+	color: #1a1a1a;
 }
 
 .pool .label {
-	color: #666;
+	color: #333;
 	letter-spacing: 1px;
+	font-weight: bold;
 }
 
 .stackrow {
@@ -234,8 +238,9 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 	margin-right: 7px;
 }
 .relwrap .rellab {
-	font-size: 11px;
-	color: #777;
+	font-size: 12px;
+	color: #444;
+	font-weight: bold;
 }
 .relwrap .relnum {
 	font-size: 17px;
@@ -349,12 +354,14 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 .payer-line {
 	margin-top: 2px;
 	font-size: 14px;
+	color: #1a1a1a;
 }
 .payer-line .plabel {
-	color: #555;
+	color: #333;
 	letter-spacing: 1px;
 	width: 56px;
 	flex: none;
+	font-weight: bold;
 }
 
 /* 手牌/地块：纵向列（每张一行） */

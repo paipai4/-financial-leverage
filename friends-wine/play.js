@@ -556,13 +556,8 @@ function render_sidebar() {
 		var rowEl = document.getElementById("role_" + rid)
 		if (rowEl)
 			rowEl.classList.toggle("hidden", !seats[rid])
-		// 角色名显示中文（client.js 写入英文角色名，这里覆盖）
-		if (rowEl) {
-			var rn = rowEl.querySelector(".role_name")
-			if (rn)
-				rn.textContent = FW.ROLE_NAMES[rid] || rid
-		}
 	}
+	// 侧栏角色名已用 CSS 隐藏（.role_name display:none），无需 JS 覆盖
 	document.getElementById("turn_info").textContent =
 		view.state === "game_over" ? "游戏结束" :
 		`第 ${view.round} 回合（最多4） · 第 ${view.phase} 阶段（最多6）`
