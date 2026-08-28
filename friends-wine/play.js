@@ -521,7 +521,7 @@ function empty_hint(text) {
 	return s
 }
 
-// ---------- 侧栏（简化为轮转/回合信息；选人目标在版图玩家面板上） ----------
+// ---------- 侧栏（纯角色卡：仅名字/用户，统计信息都在玩家面板） ----------
 
 function render_sidebar() {
 	var seats = {}
@@ -531,13 +531,6 @@ function render_sidebar() {
 		var rowEl = document.getElementById("role_" + rid)
 		if (rowEl)
 			rowEl.classList.toggle("hidden", !seats[rid])
-	}
-	for (const p of (view.players || [])) {
-		var stat = document.getElementById("stat_" + p.id)
-		if (stat) {
-			stat.textContent = (p.alive ? `现金 ${fw_fmt_cash(p.cash)} · 手牌 ${view.hand_sizes[p.id] || 0}` : "已出局") +
-				` · 贷款 ${(view.loans || []).filter(function (l) { return l.owner === p.id }).length} 笔`
-		}
 	}
 	document.getElementById("turn_info").textContent =
 		view.state === "game_over" ? "游戏结束" :
