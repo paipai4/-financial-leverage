@@ -45,13 +45,32 @@ body.Sun header.your_turn { background-color: wheat; }
 body.Qian header.your_turn { background-color: plum; }
 body.Zhou header.your_turn { background-color: paleturquoise; }
 
-/* 玩家座位卡底色（仿 POG 的 role 底色） */
-#role_Wang, .role[data-role="Wang"] { background-color: lightcoral; }
-#role_Li, .role[data-role="Li"] { background-color: lightsteelblue; }
-#role_Zhao, .role[data-role="Zhao"] { background-color: lightgreen; }
-#role_Sun, .role[data-role="Sun"] { background-color: wheat; }
-#role_Qian, .role[data-role="Qian"] { background-color: plum; }
-#role_Zhou, .role[data-role="Zhou"] { background-color: paleturquoise; }
+/* 玩家座位卡：彩色彩带（左缘 8px 色条，颜色与玩家面板色点一一对应）；
+ * 底色用同色淡调（仿 POG role 底色），角色卡内容（用户名）由 client.js 生成 */
+#role_Wang, .role[data-role="Wang"] {
+	background-color: #fdecec;
+	border-left: 8px solid #b04040;
+}
+#role_Li, .role[data-role="Li"] {
+	background-color: #edf3fd;
+	border-left: 8px solid #4470b0;
+}
+#role_Zhao, .role[data-role="Zhao"] {
+	background-color: #eef7ee;
+	border-left: 8px solid #3f8f4f;
+}
+#role_Sun, .role[data-role="Sun"] {
+	background-color: #fbf4e4;
+	border-left: 8px solid #b08a3e;
+}
+#role_Qian, .role[data-role="Qian"] {
+	background-color: #f3effa;
+	border-left: 8px solid #7d5ba6;
+}
+#role_Zhou, .role[data-role="Zhou"] {
+	background-color: #e9f6f6;
+	border-left: 8px solid #2f8f8f;
+}
 
 /* 未参战的座位行隐藏 */
 .role.hidden { display: none; }
