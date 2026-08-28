@@ -185,6 +185,30 @@ function render_stage() {
 		el.appendChild(make_panel("终局", String(view.prompt)))
 		return
 	}
+
+	// 还款提醒条：常驻显示每笔未偿贷款离到期的阶段数，最紧急的醒目
+	var loans = (view.loans || []).filter(function (l) { return l.owner && (view.players || []).some(function (p) { return p.id === l.owner && p.alive }) })
+	if (loans.length > 0) {
+		var bar = document.createElement("div")
+		bar.className = "due-bar"
+		var barTitle = document.createElement("span")
+		barTitle.className = "due-bar-title"
+		barTitle.textContent = "⏰ 还款提醒"
+		bar.appendChild(barTitle)
+		loans.sort(function (a, b) { return a.due - b.due })
+		for (const l of loans) {
+			var dueIn = (l.due || 0) - (view.counter || 0)
+			var urgent = dueIn <= 0
+			var soon = dueIn > 0 && dueIn <= 2
+			var chip = document.createElement("span")
+			chip.className = "due-chip" + (urgent ? " due-now" : soon ? " due-soon" : "")
+			chip.textContent = `${who_name(l.owner)} ${city_name(l.city)} ${fw_fmt_cash(l.principal)}×${fmt_mult10(l.mult10)}：${urgent ? "立即还！" : dueIn + " 阶段后"}`
+			bind_tooltip(chip, `贷款 ${fw_fmt_cash(l.principal)} · 偿还倍数 ${fmt_mult10(l.mult10)} · 到期阶段 ${l.due}（当前第 ${view.counter} 阶段）`, "loan")
+			bar.appendChild(chip)
+		}
+		el.appendChild(bar)
+	}
+
 	// 竞价详情在弹窗里；这里只保留待拍队列预览
 	if (view.auction_left && view.auction_left.length > 0) {
 		var qtxt = view.auction_left.map(function (e) {
