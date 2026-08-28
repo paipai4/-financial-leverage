@@ -127,9 +127,18 @@ function render_auction_dialog() {
 	inner.className = "body"
 	var lines = []
 	lines.push(`拍品：${bid.kind === "loan" ? "贷款" : "土地"} ${fw_fmt_cash(bid.amount)}`)
-	lines.push(bid.high
-		? `当前最高：${who_name(bid.high)} ${bid.kind === "loan" ? fmt_mult10(bid.mult) + " 倍" : bid.mult + " 倍"}`
-		: "暂无报价，等待起拍……")
+
+	// 当前出价方：醒目大字
+	var cur = document.createElement("div")
+	cur.className = "bid-current"
+	if (bid.high) {
+		cur.innerHTML = `当前出价：<b style="color:${fw_color(bid.high)}">${who_name(bid.high)}</b> ` +
+			`<b>${bid.kind === "loan" ? fmt_mult10(bid.mult) + " 倍" : bid.mult + " 倍"}</b>`
+	} else {
+		cur.innerHTML = "当前出价：<b>暂无报价，等待起拍……</b>"
+	}
+	inner.appendChild(cur)
+
 	if (bid.kind === "loan")
 		lines.push("中标后领取本金；到期按中标倍数还本付息。")
 	else
@@ -141,6 +150,26 @@ function render_auction_dialog() {
 	txt.style.whiteSpace = "pre-line"
 	txt.textContent = lines.join("\n")
 	inner.appendChild(txt)
+
+	// 出价历史：倒序显示最近报价
+	if (bid.history && bid.history.length > 0) {
+		var hist = document.createElement("div")
+		hist.className = "bid-history"
+		var hlab = document.createElement("div")
+		hlab.className = "bid-history-label"
+		hlab.textContent = "出价历史"
+		hist.appendChild(hlab)
+		var hlist = bid.history.slice().reverse()
+		for (const [pid, m] of hlist) {
+			var hrow = document.createElement("div")
+			hrow.className = "bid-history-row"
+			hrow.innerHTML = `<span style="color:${fw_color(pid)}">● ${who_name(pid)}</span> ` +
+				`<b>${bid.kind === "loan" ? fmt_mult10(m) + " 倍" : m + " 倍"}</b>` +
+				(m === bid.mult && pid === bid.high ? " <em>（当前最高）</em>" : "")
+			hist.appendChild(hrow)
+		}
+		inner.appendChild(hist)
+	}
 
 	// 操作按钮：仅当前可用的动作（view.actions 驱动）
 	var grid = document.createElement("div")
@@ -301,6 +330,16 @@ function render_city(c) {
 		if (!tok.paid && can("develop_land", tok.token)) {
 			t.classList.add("developable")
 			t.addEventListener("click", function () { send_action("develop_land", tok.token) })
+		}
+		// 该玩家在本城的维权标记：直接标在土地旁边（玩家色）
+		var mkv = (c.markers || {})[tok.owner] || 0
+		if (mkv > 0) {
+			var mk = document.createElement("span")
+			mk.className = "marker-chip"
+			mk.style.background = fw_color(tok.owner)
+			mk.textContent = `⚖${mkv}`
+			bind_tooltip(mk, `${who_name(tok.owner)} 在本城的维权标记：${mkv} 个（每 3 个政府关系-1 并收回一块地）`, "rel")
+			t.appendChild(mk)
 		}
 		tokens.appendChild(t)
 	}

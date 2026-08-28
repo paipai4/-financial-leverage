@@ -405,6 +405,18 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 	border-style: dashed;
 }
 
+/* 维权标记小徽章：标在所属地块旁，玩家色底 */
+.marker-chip {
+	display: inline-block;
+	margin-left: 4px;
+	padding: 0 3px;
+	border-radius: 3px;
+	color: #fff;
+	font-size: 10px;
+	font-weight: bold;
+	line-height: 14px;
+}
+
 /* ---- 玩家面板（固定每行 3 个；手牌列纵向排布） ---- */
 
 #players {
@@ -697,6 +709,38 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 	flex-wrap: wrap;
 	gap: 6px;
 	margin-top: 10px;
+}
+
+/* 当前出价方：醒目大字 */
+.bid-current {
+	font-size: 18px;
+	margin: 8px 0 4px;
+	padding: 6px 10px;
+	background: #fffbe8;
+	border: 1px solid #c8a24a;
+	border-radius: 5px;
+}
+
+/* 出价历史 */
+.bid-history {
+	margin-top: 8px;
+	border-top: 1px dashed #b8a888;
+	padding-top: 5px;
+}
+.bid-history-label {
+	font-size: 12px;
+	color: #6b5418;
+	font-weight: bold;
+	letter-spacing: 1px;
+	margin-bottom: 3px;
+}
+.bid-history-row {
+	font-size: 14px;
+	line-height: 19px;
+}
+.bid-history-row em {
+	color: #1a8a1a;
+	font-style: normal;
 }
 
 /* ---- 悬停提示 ---- */

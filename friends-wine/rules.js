@@ -579,6 +579,7 @@ function open_bid(game, entry) {
 	game.bid.cur = first_bidder(game)
 	game.state = "bid"
 	game.active = game.bid.cur
+	game.bid_history = [] // 本次拍卖的出价历史
 	const what = entry.kind === "loan"
 		? `贷款 ${fmt_cash(entry.principal)}`
 		: `土地（底价 ${fmt_cash(entry.land.base)}）`
@@ -1326,6 +1327,7 @@ function bid_action(game, player, arg, lo, hi, step) {
 		throw new Error("现金不足，买不起这个倍数")
 	bid.high = player
 	bid.mult = v
+	game.bid_history.push([player, v]) // 记录出价历史
 	game.log.push(`${log_name(player)} 报价 ${bid.kind === "loan" ? fmt_mult(v) + " 倍" : v + " 倍"}。`)
 	close_or_continue(game)
 }
@@ -1507,6 +1509,7 @@ exports.view = function (state, player) {
 			high: bid.high,
 			mult: bid.mult,
 			passed: bid.passed.slice(),
+			history: (game.bid_history || []).slice(), // 出价历史 [ [玩家, 倍数], ... ]
 		}
 	}
 	return view
