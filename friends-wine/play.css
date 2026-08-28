@@ -578,11 +578,13 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 	font-size: 14px;
 	color: #5a3c00;
 	letter-spacing: 1px;
+	font-weight: bold;
 }
 .payer .pcard .card-desc {
 	font-size: 11.5px;
 	line-height: 15px;
 	color: #444;
+	font-weight: bold;
 }
 .payer .pcard .card-news {
 	font-size: 10.5px;
@@ -591,6 +593,7 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 	border-top: 1px dashed #c8b88a;
 	padding-top: 2px;
 	margin-top: 1px;
+	font-weight: bold;
 }
 .payer .pcard.playable {
 	border-color: #ff8c1a;

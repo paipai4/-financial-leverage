@@ -1561,9 +1561,24 @@ function public_hand(game, pid) {
 		const def = CARDS[h.card]
 		return {
 			uid: h.uid, kind: "card", card: h.card, label: def ? def.name : h.card,
-			desc: def ? def.desc : "", news: def ? def.news : "",
+			desc: def ? def.desc : "", news: def ? pick_news(h.uid, def.news) : "",
 		}
 	})
+}
+
+// 从新闻文案【】段落中按卡牌 uid 哈希选一句（幂等：同卡永远同句，view 可反复调用）
+function pick_news(uid, news) {
+	if (!news)
+		return ""
+	const parts = news.match(/【[^】]*】/g) || []
+	if (parts.length === 0)
+		return news
+	let h = 0
+	const s = String(uid)
+	for (let i = 0; i < s.length; ++i) {
+		h = (h * 31 + s.charCodeAt(i)) | 0
+	}
+	return parts[((h % parts.length) + parts.length) % parts.length]
 }
 
 function role_name_safe(game, pid) {
