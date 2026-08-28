@@ -52,25 +52,25 @@ body.Sun header.your_turn { background-color: wheat; }
 body.Qian header.your_turn { background-color: plum; }
 body.Zhou header.your_turn { background-color: paleturquoise; }
 
-/* 玩家座位卡：实色彩带（左缘 16px，颜色与玩家面板色点一一对应）；
- * 底色取消淡调（公共角色卡白底即可），彩带本身即强对比标识 */
+/* 玩家座位卡：整条淡色背景带（整卡宽），左缘同色实条作强调；
+ * 颜色与玩家面板色点一一对应 */
 #role_Wang, .role[data-role="Wang"] {
-	border-left: 16px solid #b04040;
+	background: linear-gradient(90deg, #b04040 10px, #f6dada 10px, #f6dada 100%);
 }
 #role_Li, .role[data-role="Li"] {
-	border-left: 16px solid #4470b0;
+	background: linear-gradient(90deg, #4470b0 10px, #dae6f6 10px, #dae6f6 100%);
 }
 #role_Zhao, .role[data-role="Zhao"] {
-	border-left: 16px solid #3f8f4f;
+	background: linear-gradient(90deg, #3f8f4f 10px, #d8ecd8 10px, #d8ecd8 100%);
 }
 #role_Sun, .role[data-role="Sun"] {
-	border-left: 16px solid #b08a3e;
+	background: linear-gradient(90deg, #b08a3e 10px, #f2e7c8 10px, #f2e7c8 100%);
 }
 #role_Qian, .role[data-role="Qian"] {
-	border-left: 16px solid #7d5ba6;
+	background: linear-gradient(90deg, #7d5ba6 10px, #e4daf2 10px, #e4daf2 100%);
 }
 #role_Zhou, .role[data-role="Zhou"] {
-	border-left: 16px solid #2f8f8f;
+	background: linear-gradient(90deg, #2f8f8f 10px, #d6efef 10px, #d6efef 100%);
 }
 
 /* 侧栏角色卡：隐藏角色名（client.js 生成的 .role_name），只留用户名 */
@@ -208,21 +208,17 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 }
 
 .rels .relrow {
-	display: flex;
-	flex-wrap: wrap; /* 玩家多时自动折行：3 人一行、4 人起第二行 */
+	display: grid;
+	grid-template-columns: 30px repeat(6, auto); /* 第1列=标签占位，玩家列依次排 */
 	align-items: center;
-	gap: 4px 6px;
+	column-gap: 6px;
+	row-gap: 3px;
 	margin-top: 3px;
-	/* 悬挂缩进：整行右移标签宽，标签负 margin 拉回行首，
-	   折行的第二行从此对齐到标签后的内容起点 */
-	padding-left: 26px;
 }
 
 .rels .relrow .relb {
-	flex: none;
-	width: 26px;
-	margin-left: -26px;
-	margin-right: 4px;
+	grid-column: 1;
+	align-self: start;
 }
 
 /* 关系组（色点+数字）整体不拆散 */
