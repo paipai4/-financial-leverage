@@ -66,25 +66,25 @@ body.Sun header.your_turn { background-color: wheat; }
 body.Qian header.your_turn { background-color: plum; }
 body.Zhou header.your_turn { background-color: paleturquoise; }
 
-/* 玩家座位卡：照抄上海1937 的做法——整卡纯色背景（玩家色），无渐变无彩带；
- * 颜色与玩家面板色点一一对应；在线状态由公共 ○/● 显示 */
+/* 玩家座位卡：整卡纯色背景（企业色淡调，与场上 FW.COLORS 同色系）；
+ * 旺达金、龙创紫、久大蓝、旺柯灰、币贵橙红、格陵兰翠绿 */
 #role_Wang, .role[data-role="Wang"] {
-	background-color: #e3a7a7;
+	background-color: #f0e6c8;
 }
 #role_Li, .role[data-role="Li"] {
-	background-color: #a7bfe3;
+	background-color: #e2d6f0;
 }
 #role_Zhao, .role[data-role="Zhao"] {
-	background-color: #a7d8a7;
+	background-color: #d6e3f0;
 }
 #role_Sun, .role[data-role="Sun"] {
-	background-color: #e3cfa7;
+	background-color: #e0e0e0;
 }
 #role_Qian, .role[data-role="Qian"] {
-	background-color: #c9b5e3;
+	background-color: #f5dcc8;
 }
 #role_Zhou, .role[data-role="Zhou"] {
-	background-color: #a7d8d8;
+	background-color: #d2e8dd;
 }
 
 /* 侧栏角色名（企业名）与用户名 */
