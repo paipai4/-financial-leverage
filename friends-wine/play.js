@@ -345,11 +345,10 @@ function render_players() {
 	var targetIds = Array.isArray(A("choose_card_player")) ? A("choose_card_player") : []
 	var mine = myRole
 
-	// 分成每行 2~3 块
+	// 固定每行 3 块（2 人局也占满一行三格位，保持版面稳定）
 	var row = null
-	var perRow = (view.players || []).length <= 3 ? 2 : 3
 	;(view.players || []).forEach(function (p, i) {
-		if (i % perRow === 0) {
+		if (i % 3 === 0) {
 			row = document.createElement("div")
 			row.className = "payer-row"
 			box.appendChild(row)
@@ -383,10 +382,14 @@ function player_panel(p, targetIds, mine) {
 	var body = document.createElement("div")
 	body.className = "payer-body"
 	if (p.alive) {
-		body.appendChild(payer_line("地块", (view.hands[p.id] || []).filter(function (h) { return h.kind === "land" }), p, mine))
+		// 手牌明细仅本人可见；他人只显示张数
+		var myHands = mine === p.id ? (view.hands[p.id] || []) : []
+		var handCount = view.hand_sizes[p.id] || 0
+		var landCount = myHands.filter(function (h) { return h.kind === "land" }).length
+		body.appendChild(payer_line("地块", myHands.filter(function (h) { return h.kind === "land" }), p, mine, landCount))
 		body.appendChild(payer_line("贷款", (view.loans || []).filter(function (l) { return l.owner === p.id }), p, mine))
 		body.appendChild(payer_line("关系", (view.cities || []), p, mine))
-		body.appendChild(payer_line("手牌", (view.hands[p.id] || []).filter(function (h) { return h.kind !== "land" }), p, mine))
+		body.appendChild(payer_line("手牌", myHands.filter(function (h) { return h.kind !== "land" }), p, mine, handCount))
 	}
 	root.appendChild(body)
 
@@ -397,7 +400,7 @@ function player_panel(p, targetIds, mine) {
 	return root
 }
 
-function payer_line(label, items, p, mine) {
+function payer_line(label, items, p, mine, count) {
 	var line = document.createElement("div")
 	line.className = "payer-line"
 	var lab = document.createElement("span")
@@ -431,7 +434,16 @@ function payer_line(label, items, p, mine) {
 		return line
 	}
 
-	// 地块 / 手牌：公开芯片；地块墨绿底
+	// 地块 / 手牌：他人仅见数量（count），本人见明细（纵向）
+	if (count !== undefined && mine !== p.id) {
+		var cnt = document.createElement("span")
+		cnt.className = "pcard dead"
+		cnt.textContent = count + " 张"
+		bind_tooltip(cnt, `${who_name(p.id)} 的${label}：${count} 张（详情仅本人可见）`)
+		line.appendChild(cnt)
+		return line
+	}
+
 	var cards = document.createElement("span")
 	cards.className = "phand"
 	for (const h of items) {

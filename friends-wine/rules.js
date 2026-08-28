@@ -1450,7 +1450,7 @@ exports.view = function (state, player) {
 			uid: l.uid, owner: l.owner, city: l.city, principal: l.principal, mult10: l.mult10, due: l.due,
 		})),
 		hand_sizes: {},
-		// 手牌为公开信息：全员手牌（地块/卡牌）对所有人可见（含 Observer）
+		// 手牌明细只对自己可见；其他人（含 Observer）仅见数量 hand_sizes
 		hands: {},
 		counter: game.counter,
 		pending: game.pending ? { type: game.pending.type, card: game.pending.card || null } : null,
@@ -1466,7 +1466,7 @@ exports.view = function (state, player) {
 
 	for (const p of game.order) {
 		view.hand_sizes[p] = game.hand[p].length
-		view.hands[p] = public_hand(game, p)
+		view.hands[p] = p === player ? public_hand(game, p) : null
 	}
 
 	if (game.state === "game_over") {

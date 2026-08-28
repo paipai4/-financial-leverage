@@ -209,7 +209,7 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 	border-style: dashed;
 }
 
-/* ---- 玩家面板（横排 2~3 个，公开信息全展示） ---- */
+/* ---- 玩家面板（固定每行 3 个；手牌列纵向排布） ---- */
 
 #players {
 	margin-top: 14px;
@@ -222,12 +222,13 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 }
 
 .payer {
-	flex: 1 1 0;
-	min-width: 300px;
+	flex: 0 0 calc(33.33% - 7px);
+	min-width: 260px;
 	background-color: #f5efdf;
 	border: 1px solid black;
 	border-radius: 5px;
 	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+	box-sizing: border-box;
 }
 
 .payer.active {
@@ -271,22 +272,16 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 	font-size: 14px;
 }
 
-.payer-status {
-	font-size: 11px;
-	color: #7a2f2f;
-}
-
 .payer-body {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px 14px;
 	padding: 6px 9px 8px;
 }
 
 .payer-line {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 5px;
-	margin-top: 4px;
+	margin-top: 2px;
 	font-size: 11.5px;
-	align-items: center;
 }
 .payer-line .plabel {
 	color: #555;
@@ -295,15 +290,13 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 	flex: none;
 }
 
-.payer .relchip {
-	background-color: #e6e0cd;
-}
-
-/* 面板内手牌/地块：公开芯片，紧凑小卡 */
+/* 手牌/地块：纵向列（每张一行） */
 .payer .phand {
 	display: flex;
-	flex-wrap: wrap;
-	gap: 4px;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 3px;
+	margin-top: 2px;
 }
 
 .payer .pcard {
@@ -324,7 +317,6 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 .payer .pcard.dead {
 	opacity: 0.35;
 }
-/* 地块芯片：墨绿边框区分卡牌 */
 .payer .pcard.land {
 	border-color: #2e5641;
 	background-color: #eef4e2;
