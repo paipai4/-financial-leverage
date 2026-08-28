@@ -220,7 +220,7 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 }
 
 .relchip {
-	min-width: 20px;
+	min-width: 26px;
 	text-align: center;
 	padding: 1px 5px;
 	border-radius: 3px;
@@ -228,6 +228,20 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 	border: 1px solid #999;
 	color: #222;
 	font-size: 13px;
+}
+
+/* 关系行里的玩家色点徽章 */
+.relbadge {
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	color: #fff;
+	font-size: 10px;
+	line-height: 16px;
+	text-align: center;
+	margin-right: 2px;
+	flex: none;
 }
 
 /* 面板关系徽章：标签小字、数值大号加粗；危险（政≤-2）红底 */
@@ -262,6 +276,29 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 	display: flex;
 	flex-wrap: wrap;
 	gap: 4px;
+	min-height: 22px;
+	align-items: center;
+}
+
+/* 消费者池区块：始终显示，带醒目标题与边框 */
+.consumer-block {
+	border: 1px solid #8a6d2f;
+	background: #faf3dc;
+	border-radius: 4px;
+	padding: 4px 6px;
+	margin-top: 8px;
+}
+.consumer-block .cblabel {
+	font-size: 12px;
+	font-weight: bold;
+	color: #6b5418;
+	letter-spacing: 1px;
+	margin-bottom: 3px;
+}
+.consumer-empty {
+	font-size: 12px;
+	color: #8a7a4f;
+	font-style: italic;
 }
 
 .token {
@@ -364,12 +401,12 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 	font-weight: bold;
 }
 
-/* 手牌/地块：纵向列（每张一行） */
+/* 手牌/地块：横排紧凑换行 */
 .payer .phand {
 	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-	gap: 3px;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px;
 	margin-top: 2px;
 }
 

@@ -247,39 +247,50 @@ function render_city(c) {
 	rels.appendChild(rel_row(c, "bank_rel", "银"))
 	root.appendChild(rels)
 
+	// 消费者池：始终显示（含空态），带标题区块
 	var con = c.consumer || []
-	var hasMarkers = Object.keys(c.markers || {}).some(function (k) { return c.markers[k] > 0 })
-	if (con.length > 0 || hasMarkers) {
-		var clist = document.createElement("div")
-		clist.className = "consumer-list"
-		for (const tok of con) {
-			var t = document.createElement("span")
-			t.className = "token" + (tok.paid ? " paid" : "")
-			t.style.borderColor = fw_color(tok.owner)
-			t.textContent = `${FW.ROLE_BADGES[tok.owner] || "?"}${tok.base}万${tok.paid ? "✓" : ""}`
-			bind_tooltip(t,
-				`${who_name(tok.owner)} 的地块 · 底价 ${fw_fmt_cash(tok.base)}\n` +
-				(tok.paid ? "已支付造房费用，回合结束时交付房产" : "未交付：回合结束获得 1 个维权标记") +
-				"\n每 3 个维权标记：政府关系-1 并收回一块地",
-				"land")
-			// 支付造房费：绿框可点
-			if (!tok.paid && can("develop_land", tok.token)) {
-				t.classList.add("developable")
-				t.addEventListener("click", function () { send_action("develop_land", tok.token) })
-			}
-			clist.appendChild(t)
-		}
-		for (const pid in (c.markers || {})) {
-			if (c.markers[pid] > 0) {
-				var m = document.createElement("span")
-				m.className = "token"
-				m.textContent = `⚖${FW.ROLE_BADGES[pid] || "?"}${c.markers[pid]}`
-				bind_tooltip(m, `${who_name(pid)} 在本城的维权标记：${c.markers[pid]} 个`)
-				clist.appendChild(m)
-			}
-		}
-		root.appendChild(clist)
+	var clist = document.createElement("div")
+	clist.className = "consumer-block"
+	var clab = document.createElement("div")
+	clab.className = "cblabel"
+	clab.textContent = `消费者池${con.length ? "" : "（空）"}`
+	clist.appendChild(clab)
+	var tokens = document.createElement("div")
+	tokens.className = "consumer-list"
+	if (con.length === 0 && !Object.keys(c.markers || {}).some(function (k) { return c.markers[k] > 0 })) {
+		var empty = document.createElement("span")
+		empty.className = "consumer-empty"
+		empty.textContent = "暂无地块——可把手上土地放进来换现金，或支付造房费交付房产。"
+		tokens.appendChild(empty)
 	}
+	for (const tok of con) {
+		var t = document.createElement("span")
+		t.className = "token" + (tok.paid ? " paid" : "")
+		t.style.borderColor = fw_color(tok.owner)
+		t.textContent = `${FW.ROLE_BADGES[tok.owner] || "?"}${tok.base}万${tok.paid ? "✓" : ""}`
+		bind_tooltip(t,
+			`${who_name(tok.owner)} 的地块 · 底价 ${fw_fmt_cash(tok.base)}\n` +
+			(tok.paid ? "已支付造房费用，回合结束时交付房产" : "未交付：回合结束获得 1 个维权标记") +
+			"\n每 3 个维权标记：政府关系-1 并收回一块地",
+			"land")
+		// 支付造房费：绿框可点
+		if (!tok.paid && can("develop_land", tok.token)) {
+			t.classList.add("developable")
+			t.addEventListener("click", function () { send_action("develop_land", tok.token) })
+		}
+		tokens.appendChild(t)
+	}
+	for (const pid in (c.markers || {})) {
+		if (c.markers[pid] > 0) {
+			var m = document.createElement("span")
+			m.className = "token"
+			m.textContent = `⚖${FW.ROLE_BADGES[pid] || "?"}${c.markers[pid]}`
+			bind_tooltip(m, `${who_name(pid)} 在本城的维权标记：${c.markers[pid]} 个`)
+			tokens.appendChild(m)
+		}
+	}
+	clist.appendChild(tokens)
+	root.appendChild(clist)
 
 	// 城市整体可点（选城/旋转门）
 	if (city_targets().indexOf(c.id) >= 0) {
@@ -331,10 +342,21 @@ function rel_row(city, key, label) {
 		if (!p.alive)
 			continue
 		var v = city[key][p.id]
+		// 突出显示：玩家色点 + 数值大号加粗 + 底色块
 		var chip = document.createElement("span")
 		chip.className = "relchip"
 		chip.style.color = fw_color(p.id)
-		chip.textContent = (FW.ROLE_BADGES[p.id] || p.id) + v
+		chip.style.borderColor = fw_color(p.id)
+		chip.style.backgroundColor = "#fff"
+		chip.style.fontSize = "15px"
+		chip.style.fontWeight = "bold"
+		chip.style.minWidth = "26px"
+		chip.textContent = v
+		var badge = document.createElement("span")
+		badge.className = "relbadge"
+		badge.style.background = fw_color(p.id)
+		badge.textContent = FW.ROLE_BADGES[p.id] || p.id
+		row.appendChild(badge)
 		bind_tooltip(chip, `${who_name(p.id)} 在 ${city.name} 的${key === "gov_rel" ? "政府" : "银行"}关系：${v}` +
 			(key === "bank_rel" ? "\n>3 可免费展期1阶段；>6 可展期2阶段" : "\n≤-2 回合结束会被逮捕"),
 			"rel")
@@ -417,7 +439,6 @@ function player_panel(p, targetIds, mine) {
 		var landCount = myHands.filter(function (h) { return h.kind === "land" }).length
 		body.appendChild(payer_line("地块", myHands.filter(function (h) { return h.kind === "land" }), p, mine, landCount))
 		body.appendChild(payer_line("贷款", (view.loans || []).filter(function (l) { return l.owner === p.id }), p, mine))
-		body.appendChild(payer_line("关系", (view.cities || []), p, mine))
 		body.appendChild(payer_line("手牌", myHands.filter(function (h) { return h.kind !== "land" }), p, mine, handCount))
 	}
 	root.appendChild(body)
