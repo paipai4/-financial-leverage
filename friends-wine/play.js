@@ -437,7 +437,7 @@ function player_panel(p, targetIds, mine) {
 		var myHands = mine === p.id ? (view.hands[p.id] || []) : []
 		var handCount = view.hand_sizes[p.id] || 0
 		var lands = view.lands[p.id] || []
-		body.appendChild(payer_line("地块", lands, p, mine))
+		body.appendChild(payer_line("地块", lands, p, mine, null, "已卖出的地块会出现在对应城市的消费者池"))
 		body.appendChild(payer_line("贷款", (view.loans || []).filter(function (l) { return l.owner === p.id }), p, mine))
 		body.appendChild(payer_line("手牌", myHands, p, mine, handCount))
 	}
@@ -450,12 +450,14 @@ function player_panel(p, targetIds, mine) {
 	return root
 }
 
-function payer_line(label, items, p, mine, count) {
+function payer_line(label, items, p, mine, count, hint) {
 	var line = document.createElement("div")
 	line.className = "payer-line"
 	var lab = document.createElement("span")
 	lab.className = "plabel"
 	lab.textContent = label
+	if (hint)
+		bind_tooltip(lab, hint)
 	line.appendChild(lab)
 
 	if (label === "关系") {

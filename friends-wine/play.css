@@ -27,7 +27,21 @@ aside {
 
 main {
 	background-color: rgb(149, 137, 134); /* 与上海1937 同款暖灰桌布 */
-	overflow: hidden;
+	overflow: auto; /* 显示可见滚动条（横竖均可滚动） */
+	scrollbar-color: #777 #ddd;
+}
+
+main::-webkit-scrollbar {
+	width: 14px;
+	height: 14px;
+}
+main::-webkit-scrollbar-thumb {
+	background: #777;
+	border-radius: 7px;
+	border: 2px solid #ddd;
+}
+main::-webkit-scrollbar-track {
+	background: #ddd;
 }
 
 #mapwrap {
