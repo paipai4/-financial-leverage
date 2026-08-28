@@ -37,12 +37,14 @@
 	<div id="log"></div>
 </aside>
 
-<main>
-	<div id="tablewrap">
-		<!-- 拍卖台 / 城市列 / 玩家面板由 play.js 渲染 -->
-		<div id="stage"></div>
-		<div id="cities"></div>
-		<div id="players"></div>
+<main data-min-zoom="0.3" data-max-zoom="2.5" data-map-width="1500" data-map-height="1600">
+	<div id="mapwrap">
+		<!-- 整个桌面放进 mapwrap：缩放时整体 transform，元素相对位置定死 -->
+		<div id="tablewrap">
+			<div id="stage"></div>
+			<div id="cities"></div>
+			<div id="players"></div>
+		</div>
 	</div>
 </main>
 

@@ -23,16 +23,23 @@ aside {
 	max-width: 340px;
 }
 
-/* ---- 桌布 ---- */
+/* ---- 桌布（整体缩放：桌面定宽，缩放时 transform 整体缩放） ---- */
 
 main {
 	background-color: rgb(149, 137, 134); /* 与上海1937 同款暖灰桌布 */
+	overflow: hidden;
+}
+
+#mapwrap {
+	position: relative;
+	width: 1500px;
+	height: 1600px;
 }
 
 #tablewrap {
-	max-width: 1320px;
-	margin: 0 auto;
+	width: 1500px;
 	padding: 14px 16px 40px;
+	box-sizing: border-box;
 }
 
 /* ---- 己方回合表头着色（仿 POG / 上海1937）----
