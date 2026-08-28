@@ -202,9 +202,17 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 
 .rels .relrow {
 	display: flex;
+	flex-wrap: wrap; /* 玩家多时自动折行：3 人一行、4 人起第二行 */
 	align-items: center;
-	gap: 4px;
+	gap: 4px 6px;
 	margin-top: 3px;
+}
+
+/* 关系组（色点+数字）整体不拆散 */
+.relgrp {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
 }
 
 .relb {
@@ -220,27 +228,27 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 }
 
 .relchip {
-	min-width: 26px;
+	min-width: 28px;
 	text-align: center;
-	padding: 1px 5px;
+	padding: 1px 6px;
 	border-radius: 3px;
 	background-color: gainsboro;
 	border: 1px solid #999;
 	color: #222;
-	font-size: 13px;
+	font-size: 17px;
+	font-weight: bold;
 }
 
 /* 关系行里的玩家色点徽章 */
 .relbadge {
 	display: inline-block;
-	width: 16px;
-	height: 16px;
+	width: 17px;
+	height: 17px;
 	border-radius: 50%;
 	color: #fff;
 	font-size: 10px;
-	line-height: 16px;
+	line-height: 17px;
 	text-align: center;
-	margin-right: 2px;
 	flex: none;
 }
 

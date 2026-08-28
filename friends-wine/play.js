@@ -342,25 +342,25 @@ function rel_row(city, key, label) {
 		if (!p.alive)
 			continue
 		var v = city[key][p.id]
-		// 突出显示：玩家色点 + 数值大号加粗 + 底色块
+		// 每个玩家一组（色点 + 数字），整组换行不拆散
+		var grp = document.createElement("span")
+		grp.className = "relgrp"
+		var badge = document.createElement("span")
+		badge.className = "relbadge"
+		badge.style.background = fw_color(p.id)
+		badge.textContent = FW.ROLE_BADGES[p.id] || p.id
+		grp.appendChild(badge)
 		var chip = document.createElement("span")
 		chip.className = "relchip"
 		chip.style.color = fw_color(p.id)
 		chip.style.borderColor = fw_color(p.id)
 		chip.style.backgroundColor = "#fff"
-		chip.style.fontSize = "15px"
-		chip.style.fontWeight = "bold"
-		chip.style.minWidth = "26px"
 		chip.textContent = v
-		var badge = document.createElement("span")
-		badge.className = "relbadge"
-		badge.style.background = fw_color(p.id)
-		badge.textContent = FW.ROLE_BADGES[p.id] || p.id
-		row.appendChild(badge)
 		bind_tooltip(chip, `${who_name(p.id)} 在 ${city.name} 的${key === "gov_rel" ? "政府" : "银行"}关系：${v}` +
 			(key === "bank_rel" ? "\n>3 可免费展期1阶段；>6 可展期2阶段" : "\n≤-2 回合结束会被逮捕"),
 			"rel")
-		row.appendChild(chip)
+		grp.appendChild(chip)
+		row.appendChild(grp)
 	}
 	return row
 }
