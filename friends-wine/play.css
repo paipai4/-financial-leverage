@@ -135,13 +135,15 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 }
 
 .city {
-	flex: 1 1 0;
-	min-width: 195px;
+	flex: 0 0 240px; /* 固定窄宽 */
+	min-width: 0; /* 允许内容收缩，不撑宽 */
+	box-sizing: border-box;
 	background-color: #f5efdf;
 	border: 1px solid black;
 	border-radius: 5px;
 	padding: 8px 10px;
 	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+	overflow: hidden;
 }
 
 .city .cname {
@@ -366,8 +368,8 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 }
 
 .payer {
-	flex: 0 0 calc(33.33% - 7px);
-	min-width: 260px;
+	flex: 0 0 300px; /* 固定窄宽 */
+	min-width: 0;
 	background-color: #f5efdf;
 	border: 1px solid black;
 	border-radius: 5px;
