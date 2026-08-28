@@ -398,7 +398,9 @@ function player_panel(p, targetIds, mine) {
 	head.appendChild(dot)
 	var nm = document.createElement("span")
 	nm.className = "payer-name"
-	nm.textContent = (mine === p.id ? "▶ " : "") + who_name(p.id) + (p.alive ? "" : "（已出局）")
+	// 显示真实用户名（client.js 的 roles 表），无用户名时回退角色名
+	var uname = (typeof roles === "object" && roles[p.id] && roles[p.id].user_name) ? roles[p.id].user_name : null
+	nm.textContent = (mine === p.id ? "▶ " : "") + (uname || who_name(p.id)) + (p.alive ? "" : "（已出局）")
 	head.appendChild(nm)
 	var cash = document.createElement("span")
 	cash.className = "payer-cash"
@@ -437,12 +439,13 @@ function payer_line(label, items, p, mine, count) {
 
 	if (label === "关系") {
 		for (const c of items) {
-			var chip = document.createElement("span")
-			chip.className = "relchip"
-			chip.style.color = fw_color(p.id)
-			chip.textContent = `${c.name} 政${c.gov_rel[p.id]}/银${c.bank_rel[p.id]}`
-			bind_tooltip(chip, `${c.name}：政府关系 ${c.gov_rel[p.id]}（≤-2 逮捕）· 银行关系 ${c.bank_rel[p.id]}（>3 展期1 / >6 展期2）`, "rel")
-			line.appendChild(chip)
+			// 城市名 + 政/银徽章（标签小字、数值大号加粗）
+			var cchip = document.createElement("span")
+			cchip.className = "relcity"
+			cchip.textContent = c.name
+			line.appendChild(cchip)
+			line.appendChild(rel_badge(c, p, "政", c.gov_rel[p.id], "gov"))
+			line.appendChild(rel_badge(c, p, "银", c.bank_rel[p.id], "bank"))
 		}
 		if (!items.length)
 			line.appendChild(empty_hint("无"))
@@ -461,7 +464,29 @@ function payer_line(label, items, p, mine, count) {
 		return line
 	}
 
-	// 地块 / 手牌：他人仅见数量（count），本人见明细（纵向）
+	// 关系徽章：标签（政/银）小号灰字，数值大号加粗并按关系色强调
+function rel_badge(city, p, label, value, kind) {
+	var wrap = document.createElement("span")
+	wrap.className = "relwrap"
+	var lab = document.createElement("span")
+	lab.className = "rellab"
+	lab.textContent = label
+	wrap.appendChild(lab)
+	var num = document.createElement("span")
+	num.className = "relnum"
+	num.textContent = value
+	num.style.color = fw_color(p.id)
+	wrap.appendChild(num)
+	var danger = kind === "gov" ? value <= -2 : false
+	if (danger)
+		wrap.classList.add("danger")
+	bind_tooltip(wrap,
+		`${who_name(p.id)} 在 ${city.name} 的${label}关系：${value}` +
+		(kind === "bank" ? "\n>3 可免费展期1阶段；>6 可展期2阶段" : "\n≤-2 回合结束会被逮捕"), "rel")
+	return wrap
+}
+
+// 地块 / 手牌：他人仅见数量（count），本人见明细（纵向）
 	if (count !== undefined && mine !== p.id) {
 		var cnt = document.createElement("span")
 		cnt.className = "pcard dead"
