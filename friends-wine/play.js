@@ -32,23 +32,47 @@ function on_init(scenario, options, static_view) {
 	myRole = params.role
 }
 
-// ---------- 结构化日志（仿 POG 色带，参考 shanghai1937） ----------
-// 服务端日志约定：".h1 " 回合标题、".h2 " 阶段标题、"*" 加粗事件
+// ---------- 结构化日志（分类着色：金额/玩家/城市/事件/回合） ----------
+// 服务端日志约定：".h1 " 回合标题、".h2 " 阶段标题、"*" 加粗事件；
+// 其余行按内容启发式分类着色
+
+var FW_CITY_NAMES = ["东江", "南湾", "西岭", "北原", "中州", "云溪", "沧澜"]
 
 function on_log(text) {
 	var p = document.createElement("div")
+	var cls = ""
 	if (text.startsWith(".h1 ")) {
 		text = text.substring(4)
-		p.className = "h1"
+		cls = "h1"
 	} else if (text.startsWith(".h2 ")) {
 		text = text.substring(4)
-		p.className = "h2"
+		cls = "h2"
 	} else if (text.startsWith("*")) {
 		text = text.substring(1)
-		p.className = "bold"
-	}
+		cls = "bold"
+	} else if (text === "")
+		cls = ""
+	else
+		cls = log_classify(text)
+	p.className = cls
 	p.textContent = text
 	return p
+}
+
+function log_classify(text) {
+	// 金额（含 万/亿 或 ×倍数）
+	if (/[0-9]+(\.\d+)?(万|亿)/.test(text) || /×/.test(text))
+		return "fw-money"
+	// 玩家动作/点名（含任何老板名）
+	for (const rn of ["王总", "李总", "赵总", "孙总", "钱总", "周总"])
+		if (text.indexOf(rn) >= 0)
+			return "fw-player"
+	// 城市相关（翻出/流拍/房价/政府/银行关系）
+	for (const cn of FW_CITY_NAMES)
+		if (text.indexOf(cn) >= 0)
+			return "fw-city"
+	// 事件/系统（开局、转贷、展期等）
+	return "fw-event"
 }
 
 // ---------- 更新 ----------
@@ -208,7 +232,8 @@ function render_city(c) {
 	bind_tooltip(hbtn,
 		`${c.name} 房价倍数：${c.housing}\n` +
 		"每成交一块土地 +1；≥4倍成交额外 +1；≥8倍再额外 +1\n" +
-		"消费者回收现金 = 底价 × 该倍数；造房费用 = 底价")
+		"消费者回收现金 = 底价 × 该倍数；造房费用 = 底价",
+		"city")
 	root.appendChild(hbtn)
 
 	root.appendChild(pool_block("银行池", c.banks_left, false,
@@ -235,7 +260,8 @@ function render_city(c) {
 			bind_tooltip(t,
 				`${who_name(tok.owner)} 的地块 · 底价 ${fw_fmt_cash(tok.base)}\n` +
 				(tok.paid ? "已支付造房费用，回合结束时交付房产" : "未交付：回合结束获得 1 个维权标记") +
-				"\n每 3 个维权标记：政府关系-1 并收回一块地")
+				"\n每 3 个维权标记：政府关系-1 并收回一块地",
+				"land")
 			// 支付造房费：绿框可点
 			if (!tok.paid && can("develop_land", tok.token)) {
 				t.classList.add("developable")
@@ -258,7 +284,7 @@ function render_city(c) {
 	// 城市整体可点（选城/旋转门）
 	if (city_targets().indexOf(c.id) >= 0) {
 		root.classList.add("clickable")
-		bind_tooltip(root, c.name + "（点击选择这座城市）")
+		bind_tooltip(root, c.name + "（点击选择这座城市）", "city")
 		root.addEventListener("click", function () { try_action_on_city(c.id) })
 	}
 	return root
@@ -289,7 +315,7 @@ function pool_block(label, count, is_land, tip) {
 		row.appendChild(more)
 	}
 	div.appendChild(row)
-	bind_tooltip(div, tip)
+	bind_tooltip(div, tip, "city")
 	return div
 }
 
@@ -310,7 +336,8 @@ function rel_row(city, key, label) {
 		chip.style.color = fw_color(p.id)
 		chip.textContent = (FW.ROLE_BADGES[p.id] || p.id) + v
 		bind_tooltip(chip, `${who_name(p.id)} 在 ${city.name} 的${key === "gov_rel" ? "政府" : "银行"}关系：${v}` +
-			(key === "bank_rel" ? "\n>3 可免费展期1阶段；>6 可展期2阶段" : "\n≤-2 回合结束会被逮捕"))
+			(key === "bank_rel" ? "\n>3 可免费展期1阶段；>6 可展期2阶段" : "\n≤-2 回合结束会被逮捕"),
+			"rel")
 		row.appendChild(chip)
 	}
 	return row
@@ -395,7 +422,7 @@ function player_panel(p, targetIds, mine) {
 
 	if (targetIds.indexOf(p.id) >= 0) {
 		root.addEventListener("click", function () { send_action("choose_card_player", p.id) })
-		bind_tooltip(root, `点击：将 ${who_name(p.id)} 选为目标玩家`)
+		bind_tooltip(root, `点击：将 ${who_name(p.id)} 选为目标玩家`, "rel")
 	}
 	return root
 }
@@ -414,7 +441,7 @@ function payer_line(label, items, p, mine, count) {
 			chip.className = "relchip"
 			chip.style.color = fw_color(p.id)
 			chip.textContent = `${c.name} 政${c.gov_rel[p.id]}/银${c.bank_rel[p.id]}`
-			bind_tooltip(chip, `${c.name}：政府关系 ${c.gov_rel[p.id]}（≤-2 逮捕）· 银行关系 ${c.bank_rel[p.id]}（>3 展期1 / >6 展期2）`)
+			bind_tooltip(chip, `${c.name}：政府关系 ${c.gov_rel[p.id]}（≤-2 逮捕）· 银行关系 ${c.bank_rel[p.id]}（>3 展期1 / >6 展期2）`, "rel")
 			line.appendChild(chip)
 		}
 		if (!items.length)
@@ -426,7 +453,7 @@ function payer_line(label, items, p, mine, count) {
 			var chip = document.createElement("span")
 			chip.className = "pcard" + (l.due <= (view.counter || 0) ? " dead" : "")
 			chip.textContent = `${city_name(l.city)} ${fw_fmt_cash(l.principal)}×${fmt_mult10(l.mult10)}（${l.due - (view.counter || 0)} 阶段后到期）`
-			bind_tooltip(chip, `贷款 ${fw_fmt_cash(l.principal)} · 偿还倍数 ${fmt_mult10(l.mult10)} · 到期阶段 ${l.due}`)
+			bind_tooltip(chip, `贷款 ${fw_fmt_cash(l.principal)} · 偿还倍数 ${fmt_mult10(l.mult10)} · 到期阶段 ${l.due}`, "loan")
 			line.appendChild(chip)
 		}
 		if (!items.length)
@@ -439,7 +466,7 @@ function payer_line(label, items, p, mine, count) {
 		var cnt = document.createElement("span")
 		cnt.className = "pcard dead"
 		cnt.textContent = count + " 张"
-		bind_tooltip(cnt, `${who_name(p.id)} 的${label}：${count} 张（详情仅本人可见）`)
+		bind_tooltip(cnt, `${who_name(p.id)} 的${label}：${count} 张（详情仅本人可见）`, "card")
 		line.appendChild(cnt)
 		return line
 	}
@@ -478,7 +505,7 @@ function payer_line(label, items, p, mine, count) {
 				else if (can("choose_card_land", h.uid)) send_action("choose_card_land", h.uid)
 			})
 		}
-		bind_tooltip(el, hint)
+		bind_tooltip(el, hint, h.kind === "land" ? "land" : "card")
 		cards.appendChild(el)
 	}
 	if (!items.length)
@@ -553,17 +580,18 @@ function my_turn() {
 	return myRole && myRole !== "Observer" && view.active === myRole && view.actions
 }
 
-// ---------- 悬停提示 ----------
+// ---------- 悬停提示（按信息类型加图标分类） ----------
 
-function bind_tooltip(el, text) {
-	el.addEventListener("mouseenter", function (evt) { show_tooltip(evt, text) })
+function bind_tooltip(el, text, kind) {
+	el.addEventListener("mouseenter", function (evt) { show_tooltip(evt, text, kind) })
 	el.addEventListener("mousemove", move_tooltip)
 	el.addEventListener("mouseleave", hide_tooltip)
 }
 
-function show_tooltip(e, text) {
+function show_tooltip(e, text, kind) {
 	var tip = document.getElementById("tooltip")
 	tip.textContent = text
+	tip.className = kind ? "tip-" + kind : ""
 	tip.hidden = false
 	move_tooltip_at(e)
 }
