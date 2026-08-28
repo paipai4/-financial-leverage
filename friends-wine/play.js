@@ -123,6 +123,9 @@ function render_auction_dialog() {
 	title.textContent = `${city_name(bid.city)} · ${bid.kind === "loan" ? "贷款竞拍" : "土地竞拍"}`
 	body.appendChild(title)
 
+	// 拖动弹窗：按住标题栏拖动（仿上海1937 的 chart_popup）
+	make_draggable(dlg, title)
+
 	var inner = document.createElement("div")
 	inner.className = "body"
 	var lines = []
@@ -203,6 +206,30 @@ function dialog_btn(label, fn, cls) {
 	b.textContent = label
 	b.addEventListener("click", fn)
 	return b
+}
+
+// 弹窗拖动：按住标题栏移动（仿上海1937 chart_popup）
+function make_draggable(dlg, handle) {
+	var startX = 0, startY = 0, ox = 0, oy = 0
+	handle.addEventListener("mousedown", function (evt) {
+		if (evt.button !== 0)
+			return
+		startX = evt.clientX
+		startY = evt.clientY
+		ox = dlg.offsetLeft
+		oy = dlg.offsetTop
+		function onMove(e) {
+			dlg.style.left = (ox + e.clientX - startX) + "px"
+			dlg.style.top = (oy + e.clientY - startY) + "px"
+		}
+		function onUp() {
+			document.removeEventListener("mousemove", onMove)
+			document.removeEventListener("mouseup", onUp)
+		}
+		document.addEventListener("mousemove", onMove)
+		document.addEventListener("mouseup", onUp)
+		evt.preventDefault()
+	})
 }
 
 // ---------- 信息面板（拍卖台当拍品描述，附带排队预览） ----------

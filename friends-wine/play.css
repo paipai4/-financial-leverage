@@ -683,10 +683,11 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 	border: 1px solid black;
 	border-radius: 6px;
 	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+	position: fixed; /* 拖动基于视口坐标 */
 }
 
 #auction_dialog::backdrop {
-	background-color: rgba(0, 0, 0, 0.45);
+	background-color: transparent; /* 背景不变暗 */
 }
 
 .modal-dialog h3 {
@@ -696,6 +697,8 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 	padding: 6px 12px;
 	border-bottom: 1px solid black;
 	letter-spacing: 1px;
+	cursor: move; /* 可拖动 */
+	user-select: none;
 }
 
 .modal-dialog .body {
