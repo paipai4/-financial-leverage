@@ -206,6 +206,16 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 	align-items: center;
 	gap: 4px 6px;
 	margin-top: 3px;
+	/* 悬挂缩进：整行右移标签宽，标签负 margin 拉回行首，
+	   折行的第二行从此对齐到标签后的内容起点 */
+	padding-left: 26px;
+}
+
+.rels .relrow .relb {
+	flex: none;
+	width: 26px;
+	margin-left: -26px;
+	margin-right: 4px;
 }
 
 /* 关系组（色点+数字）整体不拆散 */
