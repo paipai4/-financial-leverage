@@ -64,8 +64,8 @@ function log_classify(text) {
 	// 金额（含 万/亿 或 ×倍数）
 	if (/[0-9]+(\.\d+)?(万|亿)/.test(text) || /×/.test(text))
 		return "fw-money"
-	// 玩家动作/点名（含任何老板名）
-	for (const rn of ["王总", "李总", "赵总", "孙总", "钱总", "周总"])
+	// 玩家动作/点名（含任何企业名）
+	for (const rn of ["旺达", "龙创", "久大", "旺柯", "币贵", "格陵兰"])
 		if (text.indexOf(rn) >= 0)
 			return "fw-player"
 	// 城市相关（翻出/流拍/房价/政府/银行关系）
@@ -538,7 +538,7 @@ function player_panel(p, targetIds, mine) {
 	nm.className = "payer-name"
 	// 显示真实用户名（client.js 的 roles 表），无用户名时回退角色名；企业名作前缀
 	var uname = (typeof roles === "object" && roles[p.id] && roles[p.id].user_name) ? roles[p.id].user_name : null
-	nm.textContent = (mine === p.id ? "▶ " : "") + (FW.COMPANY[p.id] ? FW.COMPANY[p.id] + "·" : "") + (uname || who_name(p.id)) + (p.alive ? "" : "（已出局）")
+	nm.textContent = (mine === p.id ? "▶ " : "") + who_name(p.id) + "·" + (uname || "") + (p.alive ? "" : "（已出局）")
 	head.appendChild(nm)
 	var cash = document.createElement("span")
 	cash.className = "payer-cash"
@@ -713,10 +713,14 @@ function render_sidebar() {
 		seats[p.id] = true
 	for (const rid of FW.ROLES) {
 		var rowEl = document.getElementById("role_" + rid)
-		if (rowEl)
+		if (rowEl) {
 			rowEl.classList.toggle("hidden", !seats[rid])
+			// 侧栏角色名显示企业名（client.js 写入英文角色名，这里覆盖）
+			var rn = rowEl.querySelector(".role_name")
+			if (rn)
+				rn.textContent = FW.ROLE_NAMES[rid] || rid
+		}
 	}
-	// 侧栏角色名已用 CSS 隐藏（.role_name display:none），无需 JS 覆盖
 	document.getElementById("turn_info").textContent =
 		view.state === "game_over" ? "游戏结束" :
 		`第 ${view.round} 回合（最多4） · 第 ${view.phase} 阶段（最多6）`

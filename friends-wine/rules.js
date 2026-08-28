@@ -22,12 +22,8 @@ const SCENARIO_PLAYERS = { "双人局": 2, "三人局": 3, "四人局": 4 }
 
 // 六位老板：王/李/赵/孙/钱/周
 const ROLE_IDS = ["Wang", "Li", "Zhao", "Sun", "Qian", "Zhou"]
+// 企业名即玩家显示名（新规则）：旺达王总金、龙创李总紫、久大徐总蓝、旺柯孙总灰、币贵张总橙红、格陵兰周总翠绿
 const ROLE_NAMES = {
-	Wang: "王总", Li: "李总", Zhao: "徐总",
-	Sun: "孙总", Qian: "张总", Zhou: "周总",
-}
-// 企业名（新规则）：旺达王总金、龙创李总紫、久大徐总蓝、旺柯孙总灰、币贵张总橙红、格陵兰周总翠绿
-const COMPANY_NAMES = {
 	Wang: "旺达", Li: "龙创", Zhao: "久大",
 	Sun: "旺柯", Qian: "币贵", Zhou: "格陵兰",
 }

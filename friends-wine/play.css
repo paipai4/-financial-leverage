@@ -87,9 +87,10 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 	background-color: #a7d8d8;
 }
 
-/* 侧栏角色卡：隐藏角色名（client.js 生成的 .role_name），只留用户名 */
+/* 侧栏角色名（企业名）与用户名 */
 #roles .role_name {
-	display: none;
+	font-weight: bold;
+	padding-left: 2px;
 }
 #roles .role_user {
 	font-weight: bold;
@@ -347,7 +348,7 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 	text-align: center;
 	padding: 2px 8px;
 	border-radius: 5px;
-	background-color: transparent; /* 去掉白底 */
+	background-color: rgba(0, 0, 0, 0.08); /* 半透明淡底，便于辨认 */
 	border: 2px solid;
 	color: #222;
 	font-size: 20px; /* 数字更大 */

@@ -4,17 +4,14 @@
 
 var FW = {
 	ROLES: ["Wang", "Li", "Zhao", "Sun", "Qian", "Zhou"],
+	// 企业名即角色名（新规则）：旺达王总、龙创李总、久大徐总、旺柯孙总、币贵张总、格陵兰周总
 	ROLE_NAMES: {
-		Wang: "王总", Li: "李总", Zhao: "徐总",
-		Sun: "孙总", Qian: "张总", Zhou: "周总",
-	},
-	ROLE_BADGES: { Wang: "旺", Li: "龙", Zhao: "久", Sun: "柯", Qian: "币", Zhou: "格" },
-
-	// 企业名与代表色（新规则）：旺达王总金、龙创李总紫、久大徐总蓝、旺柯孙总灰、币贵张总橙红、格陵兰周总翠绿
-	COMPANY: {
 		Wang: "旺达", Li: "龙创", Zhao: "久大",
 		Sun: "旺柯", Qian: "币贵", Zhou: "格陵兰",
 	},
+	ROLE_BADGES: { Wang: "旺", Li: "龙", Zhao: "久", Sun: "柯", Qian: "币", Zhou: "格" },
+
+	// 企业名（角色名）与代表色：旺达王总金、龙创李总紫、久大徐总蓝、旺柯孙总灰、币贵张总橙红、格陵兰周总翠绿
 	COLORS: {
 		Wang: "#b8860b", // 金
 		Li: "#7d5ba6",   // 紫
