@@ -786,8 +786,172 @@ body.Zhou header.your_turn { background-color: paleturquoise; }
 .modal-dialog .bid-grid {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 6px;
+	gap: 8px;
+	margin-top: 12px;
+}
+
+/* 拍品卡片：类型图标 + 金额大字 */
+.bid-item {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 14px;
+	border-radius: 8px;
+	margin-bottom: 8px;
+	border: 1px solid #a08b5c;
+}
+.bid-item.loan {
+	background: linear-gradient(135deg, #eaf2fd, #d8e6f8);
+}
+.bid-item.land {
+	background: linear-gradient(135deg, #eaf6ea, #d4ecd4);
+}
+.bid-item-icon {
+	font-size: 34px;
+}
+.bid-item-kind {
+	font-size: 12px;
+	color: #666;
+	letter-spacing: 2px;
+}
+.bid-item-amount {
+	font-size: 30px;
+	font-weight: bold;
+	color: #222;
+	line-height: 1.1;
+}
+.bid-item-note {
+	font-size: 12px;
+	color: #777;
+	margin-top: 2px;
+}
+
+/* 当前最高：徽章 + 大倍数 */
+.bid-current {
+	font-size: 15px;
+	margin: 8px 0 4px;
+	padding: 8px 12px;
+	background: #fffbe8;
+	border: 1px solid #c8a24a;
+	border-radius: 6px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.bid-current-label {
+	color: #7a5a00;
+	font-size: 12px;
+	letter-spacing: 1px;
+}
+.bid-current .bid-mult {
+	font-size: 22px;
+	color: #a03000;
+}
+.bid-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	border-radius: 50%;
+	color: #fff;
+	font-size: 13px;
+	font-weight: bold;
+	flex: none;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+.bid-badge.sm {
+	width: 20px;
+	height: 20px;
+	font-size: 11px;
+}
+.bid-passed {
+	font-size: 12px;
+	color: #8a5a2a;
+	margin-top: 2px;
+}
+
+/* 出价历史时间线 */
+.bid-history {
 	margin-top: 10px;
+	border-top: 1px dashed #b8a888;
+	padding-top: 6px;
+}
+.bid-history-label {
+	font-size: 12px;
+	color: #6b5418;
+	font-weight: bold;
+	letter-spacing: 2px;
+	margin-bottom: 4px;
+}
+.bid-history-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 14px;
+	line-height: 22px;
+}
+.bid-history-name {
+	color: #333;
+}
+.bid-history-mult {
+	color: #222;
+}
+.bid-top {
+	color: #1a8a1a;
+	font-style: normal;
+	font-size: 11px;
+	background: #e2f4e2;
+	padding: 0 6px;
+	border-radius: 999px;
+	margin-left: auto;
+}
+
+/* 等待提示 */
+.bid-wait {
+	font-size: 14px;
+	color: #666;
+	padding: 6px 10px;
+}
+
+/* 暗标界面 */
+.secret-progress {
+	font-size: 15px;
+	margin-bottom: 6px;
+}
+.secret-note {
+	font-size: 12.5px;
+	color: #666;
+	line-height: 18px;
+	margin-bottom: 6px;
+}
+
+/* 帅按钮：渐变圆角浮起 */
+.bid-btn {
+	background: linear-gradient(180deg, #6f8db4, #4a6a94);
+	color: #fff;
+	border: 1px solid #3a5578;
+	border-radius: 6px;
+	padding: 5px 14px;
+	font-size: 15px;
+	font-weight: bold;
+	cursor: pointer;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+.bid-btn:hover {
+	background: linear-gradient(180deg, #7d9cc6, #5578a6);
+	box-shadow: 0 3px 7px rgba(0, 0, 0, 0.35);
+	transform: translateY(-1px);
+}
+.bid-btn:active {
+	transform: translateY(0);
+}
+.bid-btn.warn {
+	background: linear-gradient(180deg, #b4636f, #94404c);
+	border-color: #7a303c;
+}
+.bid-btn.warn:hover {
+	background: linear-gradient(180deg, #c2707c, #a34a57);
 }
 
 /* 当前出价方：醒目大字 */

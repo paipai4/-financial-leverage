@@ -66,17 +66,17 @@ exports.default_scenario = "标准局"
 const START_CASH = 1000 // 万元
 const MAX_HOLD_LAND = 2
 
-// 单位：万元。新规则：贷款全部 ×城市数
+// 单位：万元。新版构成：贷款全部 ×城市数
 const LOANS_BY_ROUND = [
 	[1000, 1200, 1500, 2000],
-	[2000, 2500, 3000, 4000],
-	[5000, 6000, 8000, 10000],
-	[15000, 20000, 30000, 40000],
+	[2500, 4000, 6000, 8000],
+	[8000, 10000, 15000, 20000],
+	[25000, 40000, 50000],
 ]
 const LOAN_COPIES_EXTRA = [0, 0, 0, 0]
 const ROUND_NAMES = ["创立", "发展", "兴盛", "离场"]
 
-// 土地构成：R1 前两档 ×(城市数+1)，其余 ×城市数
+// 土地构成：R1 前两档（500/600）×(城市数+1)，其余 ×城市数
 const LANDS_BY_ROUND = [
 	[500, 600, 800, 1000],
 	[1000, 1200, 1500, 2000],
@@ -178,6 +178,10 @@ function shuffled(game, list) {
 		a[j] = tmp
 	}
 	return a
+}
+
+function rng_int(game, n) {
+	return Math.floor(rng_next(game) * n)
 }
 
 function hash_seed(seed) {
@@ -318,7 +322,11 @@ function build_round_decks(game, round) {
 		else
 			lands.push(x.value)
 	}
-	return { loans: shuffled(game, loans), lands: shuffled(game, lands) }
+	const sh = shuffled(game, loans)
+	// 第 4 回合金融紧缩：每城只翻出 2 笔贷款（土地照常 4 块）
+	if (round === 4 && sh.length > c * 2)
+		sh.length = c * 2
+	return { loans: sh, lands: shuffled(game, lands) }
 }
 
 // 从左到右均匀分配到各个城市
@@ -410,6 +418,30 @@ function any_pooled_cards(game) {
 	return false
 }
 
+// 国企交易：每阶段开始时执行（玩家人数-1 次）。
+// 随机 1 城永久移除 1 笔贷款、随机 1 城永久移除 1 块土地；
+// 土地被移除时掷骰：1-3 该城房价+1，4-6 该城房价+2。无可移除则该次不生效。
+function soe_trade(game) {
+	const times = game.order.length - 1
+	for (let i = 0; i < times; ++i) {
+		const banks = game.cities.filter((c) => c.bank.length > 0)
+		if (banks.length > 0) {
+			const c = banks[rng_int(game, banks.length)]
+			c.bank.pop()
+			game.log.push(`🏛 国企交易：${c.name} 的 1 笔贷款被永久移除。`)
+		}
+		const govs = game.cities.filter((c) => c.gov.length > 0)
+		if (govs.length > 0) {
+			const c = govs[rng_int(game, govs.length)]
+			c.gov.pop()
+			const dice = 1 + rng_int(game, 6) // 1-6
+			const bump = dice <= 3 ? 1 : 2
+			c.housing += bump
+			game.log.push(`🏛 国企交易：${c.name} 的 1 块土地被永久移除（掷骰 ${dice}，房价倍数 +${bump} → ${c.housing}）。`)
+		}
+	}
+}
+
 function begin_phase(game) {
 	game.phase++
 	game.counter++
@@ -418,6 +450,8 @@ function begin_phase(game) {
 	game.priority_q = []
 
 	game.log.push(`.h2 ★ 第 ${game.round} 回合 · 第 ${game.phase} 阶段 ★`)
+	// 国企交易（阶段开始时）
+	soe_trade(game)
 	// 阶段流程（新规则）：出牌窗口（拍卖前）→ 拍卖 → 还款 → 卖房
 	build_auctions_and_window(game)
 }
@@ -625,19 +659,29 @@ function open_bid(game, entry) {
 		city: entry.city,
 		principal: entry.principal || 0,
 		land: entry.land || null,
-		mult: 0, // 贷款为倍数×10（15~50）；土地为整数倍数（2~10）
+		mult: 0,
 		high: null,
 		passed: [],
 		cur: null,
 	}
-	game.bid.cur = first_bidder(game)
-	game.state = "bid"
-	game.active = game.bid.cur
 	game.bid_history = [] // 本次拍卖的出价历史
+
 	const what = entry.kind === "loan"
 		? `贷款 ${fmt_cash(entry.principal)}`
 		: `土地（底价 ${fmt_cash(entry.land.base)}）`
 	game.log.push(`🃏 ${c.name} 翻开${what}，开始竞拍。`)
+
+	if (entry.kind === "loan") {
+		// 贷款：一次性暗中竞价（所有存活玩家同时秘密提交）
+		game.secret = { bid: game.bid, submitted: {} }
+		game.state = "bid_secret"
+		game.active = game.order.filter((p) => game.alive[p]) // 多人同时行动
+	} else {
+		// 土地：多轮公开竞价
+		game.bid.cur = first_bidder(game)
+		game.state = "bid"
+		game.active = game.bid.cur
+	}
 }
 
 function bid_eligible(game, p) {
@@ -714,6 +758,7 @@ function close_bid(game) {
 }
 
 function award_loan(game, winner, bid, c) {
+	game.bid = null // 拍卖结束，清当前拍品（弹窗随之关闭）
 	game.cash[winner] += bid.principal
 	const loan = {
 		uid: "K" + game.seq++,
@@ -743,6 +788,7 @@ function add_housing(game, c, sold_mult) {
 }
 
 function award_land(game, winner, bid, c) {
+	game.bid = null // 拍卖结束，清当前拍品
 	const m = bid.mult
 	const cost = bid.land.base * m
 	game.cash[winner] -= cost
@@ -1256,6 +1302,15 @@ function route_targets(game, player) {
 		return
 	}
 	const t = pend.left[0]
+	if (t === "2land") {
+		// 抵押重组：无需选择目标，直接结算
+		pend.left.shift()
+		const h = { uid: pend.uid, card: pend.card }
+		game.pending = null
+		apply_card(game, player, h, pend.got)
+		window_stay(game, player)
+		return
+	}
 	game.state = { city: "card_city", player: "card_player", handland: "card_land", ownloan: "card_loan", rot: "card_rot", anyloan: "card_loan" }[t]
 	if (!game.state)
 		throw new Error("未知目标类型 " + t)
@@ -1421,6 +1476,84 @@ function do_transfer(game, player, level) {
 	run_auctions(game)
 }
 
+// 贷款一次性暗中竞价：所有存活玩家同时秘密提交倍数（或弃权），全部提交后结算
+states.bid_secret = {
+	inactive: "暗中竞价",
+	prompt(game, view) {
+		const bid = game.secret.bid
+		const c = city_of(game, bid.city)
+		const submitted = Object.keys(game.secret.submitted)
+		const me = view.__fw_player
+		const iAmIn = me && game.secret.submitted[me] !== undefined
+		if (!iAmIn) {
+			view.prompt = `暗标 ${c.name} 的贷款 ${fmt_cash(bid.principal)}：所有人同时秘密提交偿还倍数（1.5~5 倍，步进 0.5），或弃权。`
+			const opts = []
+			for (let m = 15; m <= 50; m += 5)
+				opts.push(m)
+			view.actions = { secret_bid: opts, secret_pass: 1 }
+		} else {
+			view.prompt = "已提交暗标（保密），等待其余玩家提交……"
+		}
+		view.secret_submitted_count = submitted.length
+		view.secret_total = alive_players(game).length
+	},
+	secret_bid(game, player, arg) {
+		if (!game.secret || game.secret.submitted[player] !== undefined)
+			throw new Error("你已提交过暗标")
+		const v = Number(arg)
+		if (!Number.isInteger(v) || v < 15 || v > 50 || (v - 15) % 5 !== 0)
+			throw new Error("非法倍数")
+		game.secret.submitted[player] = v
+		settle_secret_if_ready(game)
+	},
+	secret_pass(game, player) {
+		if (!game.secret || game.secret.submitted[player] !== undefined)
+			throw new Error("你已提交过暗标")
+		game.secret.submitted[player] = null // 弃权
+		settle_secret_if_ready(game)
+	},
+}
+
+// 全部提交后结算暗标
+function settle_secret_if_ready(game) {
+	const secret = game.secret
+	if (!secret)
+		return
+	const submitted = Object.keys(secret.submitted)
+	const total = alive_players(game)
+	if (submitted.length < total.length)
+		return
+
+	const bid = secret.bid
+	const c = city_of(game, bid.city)
+	const bids = submitted
+		.filter((p) => secret.submitted[p] !== null)
+		.map((p) => ({ p, v: secret.submitted[p] }))
+	game.bid_history = bids.map((x) => [x.p, x.v])
+
+	if (bids.length === 0) {
+		game.log.push(`${c.name} 的贷款 ${fmt_cash(bid.principal)} 暗标结束：无人出价，流拍。`)
+		game.leftover.push({ kind: "loan", value: bid.principal })
+		game.secret = null
+		game.bid = null
+		run_auctions(game)
+		return
+	}
+
+	const top = Math.max(...bids.map((x) => x.v))
+	const contenders = bids.filter((x) => x.v === top).map((x) => x.p)
+	let winner = contenders[0]
+	for (const p of contenders)
+		if (c.bank_rel[p] > c.bank_rel[winner])
+			winner = p
+	game.log.push(`🔓 ${c.name} 贷款暗标揭晓：${bids.map((x) => `${log_name(x.p)} ${fmt_mult(x.v)} 倍`).join("，")}。`)
+	if (contenders.length > 1)
+		game.log.push(`平价之下，${log_name(winner)} 凭银行关系 ${c.bank_rel[winner]} 得标。`)
+	bid.mult = top
+	game.secret = null
+	award_loan(game, winner, bid, c)
+}
+
 states.bid = {
 	inactive: "竞拍",
 	prompt(game, view) {
@@ -1434,10 +1567,11 @@ states.bid = {
 				opts.push(m)
 			view.actions = { loan_bid: opts, bid_pass: 1 }
 		} else {
-			view.prompt = `竞拍 ${c.name} 的土地（底价 ${fmt_cash(bid.land.base)}）：倍数 2 起拍、步进 1、封顶 10 倍。当前最高：${bid.high ? log_name(bid.high) + " " + bid.mult + " 倍" : "无"}。`
+			const cap = 5 + 5 * game.round // 土地拍卖上限：5+5×回合数
+			view.prompt = `竞拍 ${c.name} 的土地（底价 ${fmt_cash(bid.land.base)}）：倍数 2 起拍、步进 1、封顶 ${cap} 倍。当前最高：${bid.high ? log_name(bid.high) + " " + bid.mult + " 倍" : "无"}。`
 			const opts = []
 			const lo = bid.high === null ? 2 : bid.mult + 1
-			for (let m = lo; m <= 10; ++m)
+			for (let m = lo; m <= cap; ++m)
 				if (bid.land.base * m <= game.cash[game.active])
 					opts.push(m)
 			view.actions = { land_bid: opts, bid_pass: 1 }
@@ -1447,7 +1581,7 @@ states.bid = {
 		bid_action(game, player, arg, 15, 50, 5)
 	},
 	land_bid(game, player, arg) {
-		bid_action(game, player, arg, 2, 10, 1)
+		bid_action(game, player, arg, 2, 5 + 5 * game.round, 1)
 	},
 	bid_pass(game, player) {
 		if (player !== game.active)
@@ -1536,6 +1670,7 @@ exports.finish = function (state, result, message) {
 	state.pending = null
 	state.window = null
 	state.sell = null
+	state.secret = null
 	state.log.push("")
 	state.log.push(message)
 	return state
@@ -1649,21 +1784,27 @@ exports.view = function (state, player) {
 
 	const me_alive = game.alive[player]
 	const S = states[game.state]
+	const is_active = Array.isArray(game.active) ? game.active.indexOf(player) >= 0 : game.active === player
 
-	if (me_alive && game.active === player && S && S.prompt) {
+	view.__fw_player = player // 供 states.prompt 识别当前视角玩家（暗标）
+
+	if (me_alive && is_active && S && S.prompt) {
 		S.prompt(game, view)
 		if (game.state === "window" || game.state === "sell")
 			view.my_hand = public_hand(game, player)
 	} else if (player !== "Observer" && !(player in game.alive)) {
 		view.prompt = "观战中……"
 	} else if (!me_alive) {
-		view.prompt = `你已出局。等待 ${role_name_safe(game, game.active)} 行动……`
+		view.prompt = "你已出局。观战中……"
+	} else if (game.state === "bid_secret") {
+		// 暗标中：非行动方提示等待提交（不暴露任何标书信息）
+		view.prompt = "贷款暗标进行中（保密）……"
 	} else {
-		view.prompt = `等待 ${role_name_safe(game, game.active)} 行动……`
+		view.prompt = `等待 ${Array.isArray(game.active) ? "各企业" : role_name_safe(game, game.active)} 行动……`
 	}
 
-	// 给所有人显示当前竞价的公开信息
-	if (game.bid) {
+	// 给所有人显示当前竞价的公开信息（暗标阶段保密，不输出）
+	if (game.bid && game.state !== "bid_secret") {
 		const bid = game.bid
 		view.bid_public = {
 			kind: bid.kind,

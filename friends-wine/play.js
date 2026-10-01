@@ -110,6 +110,13 @@ function render_action_buttons() {
 function render_auction_dialog() {
 	var dlg = document.getElementById("auction_dialog")
 	var body = document.getElementById("auction_body")
+
+	// 暗标阶段（贷款）：保密界面
+	if (view.state === "bid_secret") {
+		render_secret_dialog(dlg, body)
+		return
+	}
+
 	var bid = view.bid_public || null
 
 	if (!bid) {
@@ -129,33 +136,42 @@ function render_auction_dialog() {
 
 	var inner = document.createElement("div")
 	inner.className = "body"
-	var lines = []
-	lines.push(`拍品：${bid.kind === "loan" ? "贷款" : "土地"} ${fw_fmt_cash(bid.amount)}`)
+
+	// 拍品卡片：类型图标 + 金额大字
+	var item = document.createElement("div")
+	item.className = "bid-item " + (bid.kind === "loan" ? "loan" : "land")
+	var icon = document.createElement("span")
+	icon.className = "bid-item-icon"
+	icon.textContent = bid.kind === "loan" ? "💰" : "🏘️"
+	item.appendChild(icon)
+	var itemTxt = document.createElement("div")
+	itemTxt.innerHTML = `<div class="bid-item-kind">${bid.kind === "loan" ? "银行贷款" : "土地出让"}</div>` +
+		`<div class="bid-item-amount">${fw_fmt_cash(bid.amount)}</div>` +
+		`<div class="bid-item-note">${bid.kind === "loan" ? "中标领本金，到期按倍数还本付息" : "房价倍数 " + city_by_id(bid.city).housing + "，出价倍数即成交倍率"}</div>`
+	item.appendChild(itemTxt)
+	inner.appendChild(item)
 
 	// 当前出价方：醒目大字
 	var cur = document.createElement("div")
 	cur.className = "bid-current"
 	if (bid.high) {
-		cur.innerHTML = `当前出价：<b style="color:${fw_color(bid.high)}">${who_name(bid.high)}</b> ` +
-			`<b>${bid.kind === "loan" ? fmt_mult10(bid.mult) + " 倍" : bid.mult + " 倍"}</b>`
+		cur.innerHTML = `<span class="bid-current-label">当前最高</span>` +
+			`<span class="bid-badge" style="background:${fw_color(bid.high)}">${FW.ROLE_BADGES[bid.high] || "?"}</span>` +
+			`<b style="color:${fw_color(bid.high)}">${who_name(bid.high)}</b> ` +
+			`<b class="bid-mult">${bid.kind === "loan" ? fmt_mult10(bid.mult) + " 倍" : bid.mult + " 倍"}</b>`
 	} else {
-		cur.innerHTML = "当前出价：<b>暂无报价，等待起拍……</b>"
+		cur.innerHTML = `<span class="bid-current-label">当前最高</span><b>暂无报价，等待起拍……</b>`
 	}
 	inner.appendChild(cur)
 
-	if (bid.kind === "loan")
-		lines.push("中标后领取本金；到期按中标倍数还本付息。")
-	else
-		lines.push(`房价倍数 ${city_by_id(bid.city).housing}：出价倍数为最终成交倍率。`)
-	if (bid.passed && bid.passed.length)
-		lines.push(`已弃拍：${bid.passed.map(function (p) { return who_name(p) }).join("、")}`)
+	if (bid.passed && bid.passed.length) {
+		var passed = document.createElement("div")
+		passed.className = "bid-passed"
+		passed.textContent = "已弃拍：" + bid.passed.map(function (p) { return who_name(p) }).join("、")
+		inner.appendChild(passed)
+	}
 
-	var txt = document.createElement("div")
-	txt.style.whiteSpace = "pre-line"
-	txt.textContent = lines.join("\n")
-	inner.appendChild(txt)
-
-	// 出价历史：倒序显示最近报价
+	// 出价历史：倒序时间线
 	if (bid.history && bid.history.length > 0) {
 		var hist = document.createElement("div")
 		hist.className = "bid-history"
@@ -167,9 +183,10 @@ function render_auction_dialog() {
 		for (const [pid, m] of hlist) {
 			var hrow = document.createElement("div")
 			hrow.className = "bid-history-row"
-			hrow.innerHTML = `<span style="color:${fw_color(pid)}">● ${who_name(pid)}</span> ` +
-				`<b>${bid.kind === "loan" ? fmt_mult10(m) + " 倍" : m + " 倍"}</b>` +
-				(m === bid.mult && pid === bid.high ? " <em>（当前最高）</em>" : "")
+			hrow.innerHTML = `<span class="bid-badge sm" style="background:${fw_color(pid)}">${FW.ROLE_BADGES[pid] || "?"}</span>` +
+				`<span class="bid-history-name">${who_name(pid)}</span>` +
+				`<b class="bid-history-mult">${bid.kind === "loan" ? fmt_mult10(m) + " 倍" : m + " 倍"}</b>` +
+				(m === bid.mult && pid === bid.high ? `<em class="bid-top">当前最高</em>` : "")
 			hist.appendChild(hrow)
 		}
 		inner.appendChild(hist)
@@ -182,16 +199,65 @@ function render_auction_dialog() {
 	if (mine) {
 		if (Array.isArray(A("loan_bid")))
 			for (const v of A("loan_bid"))
-				grid.appendChild(dialog_btn("×" + fmt_mult10(v), function () { send_action("loan_bid", v) }))
+				grid.appendChild(dialog_btn("×" + fmt_mult10(v), function () { send_action("loan_bid", v) }, "bid-btn"))
 		if (Array.isArray(A("land_bid")))
 			for (const v of A("land_bid"))
-				grid.appendChild(dialog_btn(v + " 倍", function () { send_action("land_bid", v) }))
+				grid.appendChild(dialog_btn(v + " 倍", function () { send_action("land_bid", v) }, "bid-btn"))
 		if (can("bid_pass"))
-			grid.appendChild(dialog_btn("弃拍", function () { send_action("bid_pass") }, "warn"))
+			grid.appendChild(dialog_btn("弃拍", function () { send_action("bid_pass") }, "bid-btn warn"))
 	} else {
 		var wait = document.createElement("span")
-		wait.className = "btn"
+		wait.className = "bid-wait"
 		wait.textContent = `等待 ${who_name(view.active)} 报价……`
+		grid.appendChild(wait)
+	}
+	inner.appendChild(grid)
+	body.appendChild(inner)
+
+	if (!dlg.open)
+		dlg.showModal()
+}
+
+// 暗标弹窗：保密提交界面
+function render_secret_dialog(dlg, body) {
+	var acts = view.actions || {}
+	var submitted = view.secret_submitted_count || 0
+	var total = view.secret_total || 0
+	var iAmIn = !acts.secret_bid
+
+	body.replaceChildren()
+	var title = document.createElement("h3")
+	title.textContent = "🔒 贷款暗标（保密竞价）"
+	body.appendChild(title)
+	make_draggable(dlg, title)
+
+	var inner = document.createElement("div")
+	inner.className = "body"
+
+	// 提交进度
+	var prog = document.createElement("div")
+	prog.className = "secret-progress"
+	prog.innerHTML = `已提交 <b>${submitted}</b> / ${total} 家` +
+		(iAmIn ? ` · <b>你已提交（保密）</b>` : "")
+	inner.appendChild(prog)
+
+	var note = document.createElement("div")
+	note.className = "secret-note"
+	note.textContent = iAmIn
+		? "所有标书在全部提交后统一揭晓。"
+		: "从 1.5 ~ 5.0 倍中选择你的偿还倍数秘密提交，或弃权。全部提交后立即揭晓，最高倍数得标（平价比银行关系）。"
+	inner.appendChild(note)
+
+	var grid = document.createElement("div")
+	grid.className = "bid-grid"
+	if (!iAmIn && Array.isArray(acts.secret_bid)) {
+		for (const v of acts.secret_bid)
+			grid.appendChild(dialog_btn("×" + fmt_mult10(v), function () { send_action("secret_bid", v) }, "bid-btn"))
+		grid.appendChild(dialog_btn("弃权", function () { send_action("secret_pass") }, "bid-btn warn"))
+	} else {
+		var wait = document.createElement("span")
+		wait.className = "bid-wait"
+		wait.textContent = "等待其他企业提交暗标……"
 		grid.appendChild(wait)
 	}
 	inner.appendChild(grid)

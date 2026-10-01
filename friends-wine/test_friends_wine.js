@@ -70,9 +70,21 @@ function fuzz_game(seed, nplayers, max_steps, roundtrip_every, verbose) {
 			break
 		}
 
-		// 当前决策者视角的可用动作里随机挑一个
-		var me = g.active
-		var myv = r.view(g, me)
+		// 当前决策者视角的可用动作里随机挑一个（active 可能为数组=多人同时行动）
+		var actors = Array.isArray(g.active) ? g.active : [g.active]
+		var me = null, myv = null
+		for (const cand of actors) {
+			var vv = r.view(g, cand)
+			if (vv.actions && Object.keys(vv.actions).length > 0) {
+				me = cand
+				myv = vv
+				break
+			}
+		}
+		if (!me) {
+			last_error = `状态 ${g.state} 多人行动均无可用动作`
+			break
+		}
 		var acts = myv.actions
 		if (!acts || Object.keys(acts).length === 0) {
 			last_error = `状态 ${g.state} 无可用动作（active=${me}）`
